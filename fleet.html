@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroSim - 機隊管理與客艙配置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- 頂部導覽 -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 sticky top-0 z-50 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <a href="index.html" class="bg-slate-800 p-2 rounded-lg text-slate-300 hover:text-white">
+        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+      </a>
+      <h1 class="font-bold text-lg">機隊管理 (Fleet Center)</h1>
+    </div>
+    <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2.5 py-1 rounded-full">機隊規模: 12 架</span>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 space-y-6">
+
+    <!-- 飛機列表與卡片 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- 飛機清單 (左側) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
+        <h2 class="font-semibold text-sm text-slate-300">目前持有飛機</h2>
+        
+        <div class="space-y-2">
+          <!-- 飛機卡片 1 -->
+          <div class="bg-slate-800/90 border border-blue-500/50 p-3 rounded-lg flex items-center justify-between cursor-pointer">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-mono font-bold text-blue-400">B-16701</span>
+                <span class="text-xs bg-slate-700 px-1.5 py-0.5 rounded text-slate-300">B737-800</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">狀態: 執飛中 (TPE-NRT)</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-emerald-400 font-mono block">機況 98%</span>
+              <span class="text-[10px] text-slate-500">162 座位</span>
+            </div>
+          </div>
+
+          <!-- 飛機卡片 2 -->
+          <div class="bg-slate-950 border border-slate-800 p-3 rounded-lg flex items-center justify-between opacity-70 hover:opacity-100 transition cursor-pointer">
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-mono font-bold text-slate-200">B-16702</span>
+                <span class="text-xs bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">A350-900</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">狀態: 整備中 (HKG)</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-emerald-400 font-mono block">機況 100%</span>
+              <span class="text-[10px] text-slate-500">306 座位</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 客艙 SVG 視覺化剖面編輯器 (右側佔 2 欄) -->
+      <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="font-bold text-base text-slate-100">B-16701 客艙配置 (Cabin Layout)</h2>
+            <p class="text-xs text-slate-400">機型: Boeing 737-800 | 客艙長度: 30m</p>
+          </div>
+          <button class="bg-blue-600 hover:bg-blue-500 text-xs px-3 py-1.5 rounded-md font-medium">儲存改艙方案</button>
+        </div>
+
+        <!-- 艙位數據比例簡報 -->
+        <div class="grid grid-cols-3 gap-3 text-center text-xs">
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">商務艙 (Business)</span>
+            <span class="text-base font-bold text-amber-400 font-mono">12 席</span>
+            <span class="text-[10px] text-slate-500 block">38 吋排距 (2-2)</span>
+          </div>
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">經濟艙 (Economy)</span>
+            <span class="text-base font-bold text-blue-400 font-mono">150 席</span>
+            <span class="text-[10px] text-slate-500 block">31 吋排距 (3-3)</span>
+          </div>
+          <div class="bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+            <span class="text-slate-400 block">ORS 舒適度評分</span>
+            <span class="text-base font-bold text-emerald-400 font-mono">88 / 100</span>
+            <span class="text-[10px] text-slate-500 block">標準舒適</span>
+          </div>
+        </div>
+
+        <!-- SVG 動態繪製機艙座位圖 -->
+        <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 overflow-x-auto flex justify-center">
+          <svg width="560" height="140" viewBox="0 0 560 140" class="max-w-full">
+            <!-- 機身輪廓 (Fuselage Outline) -->
+            <path d="M 10,70 Q 40,10 100,10 L 520,10 Q 550,10 550,70 Q 550,130 520,130 L 100,130 Q 40,130 10,70 Z" fill="#0f172a" stroke="#334155" stroke-width="2"/>
+            
+            <!-- 駕駛艙 (Cockpit) -->
+            <path d="M 20,60 Q 35,25 60,25 L 60,115 Q 35,115 20,80 Z" fill="#1e293b"/>
+            <text x="32" y="73" fill="#64748b" font-size="9" font-weight="bold">PILOT</text>
+
+            <!-- 商務艙分區 (Business Class: 2排, 2-2配置) -->
+            <g id="business-class">
+              <!-- 排號 1-2 -->
+              <rect x="80" y="25" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="80" y="52" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="80" y="86" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="80" y="113" width="18" height="22" rx="3" fill="#d97706"/>
+
+              <rect x="110" y="25" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="110" y="52" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="110" y="86" width="18" height="22" rx="3" fill="#d97706"/>
+              <rect x="110" y="113" width="18" height="22" rx="3" fill="#d97706"/>
+            </g>
+
+            <!-- 隔板 (Divider) -->
+            <line x1="145" y1="15" x2="145" y2="125" stroke="#475569" stroke-width="2" stroke-dasharray="3,3"/>
+
+            <!-- 經濟艙分區 (Economy Class: 示意 8排, 3-3配置) -->
+            <g id="economy-class">
+              <!-- 迴圈座位顏色 (藍色) -->
+              <rect x="160" y="22" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="160" y="40" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="160" y="58" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="160" y="87" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="160" y="105" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="160" y="123" width="12" height="15" rx="2" fill="#2563eb"/>
+
+              <!-- 簡單平鋪更多經濟艙座位... -->
+              <rect x="180" y="22" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="180" y="40" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="180" y="58" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="180" y="87" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="180" y="105" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="180" y="123" width="12" height="15" rx="2" fill="#2563eb"/>
+
+              <rect x="200" y="22" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="200" y="40" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="200" y="58" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="200" y="87" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="200" y="105" width="12" height="15" rx="2" fill="#2563eb"/>
+              <rect x="200" y="123" width="12" height="15" rx="2" fill="#2563eb"/>
+
+              <!-- 機翼位置標示 -->
+              <path d="M 230,10 L 290,2 L 310,10 Z" fill="#334155"/>
+              <path d="M 230,130 L 290,138 L 310,130 Z" fill="#334155"/>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>
