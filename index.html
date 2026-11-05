@@ -119,7 +119,7 @@
           <a href="#" onclick="window.openMaintenanceModal()" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機維護與保養 (Maintenance / MRO)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
           <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">地面營運與場站 (Ground Ops & Stations)</span>
-          <a href="#" onclick="window.switchView('ground-handling')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 地勤服務合同 (Ground Handling Services)</a>
+          <a href="#" onclick="window.switchView('partners')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 地勤服務合同 (Ground Handling Services)</a>
           <a href="#" onclick="window.switchView('slots')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 機場時刻/槽位管理 (Slot Management)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
           <a href="#" onclick="window.switchView('performance-check')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">性能評估與測試工具 (Performance Check Tool)</a>
@@ -146,7 +146,7 @@
 
       <section class="as-box p-3 space-y-2 mb-3">
         <div class="flex flex-wrap justify-between items-center gap-2">
-          <div><div class="as-header-box !bg-transparent !border-0 !p-0">航線網絡 · NETWORK OVERVIEW</div><p class="text-[10px] text-gray-400 mt-1">模擬航線示意圖 · 非即時航班追蹤</p></div>
+          <div><div class="as-header-box !bg-transparent !border-0 !p-0">航線網絡 · NETWORK OVERVIEW</div><p class="text-[10px] text-gray-400 mt-1">真實地理底圖 · 大圓航線路徑（非即時航班追蹤）</p></div>
           <button type="button" onclick="window.switchView('routes')" class="bg-blue-900 border border-blue-600 text-blue-100 px-3 py-1.5 text-xs">管理航線 →</button>
         </div>
         <div id="overview-route-map" class="aerosim-map rounded-lg overflow-hidden border border-slate-700/70" role="application" aria-label="真實地圖上的航空航線網絡"></div>
@@ -172,13 +172,13 @@
             </div>
           </div>
           <div class="as-box">
-            <div class="as-header-box flex items-center justify-between gap-2"><span>燃油成本指數 · 遊戲模擬</span><span id="fuel-source-status" class="text-[10px] text-amber-300">模擬數值</span></div>
+            <div class="as-header-box flex items-center justify-between gap-2"><span>真實航空燃油現貨 · EIA JET FUEL</span><span id="fuel-source-status" class="text-[10px] text-amber-300">連線中…</span></div>
             <div class="p-3 space-y-2">
-              <div class="flex items-end justify-between gap-3"><strong id="fuel-price-current" class="text-2xl font-black text-amber-300">載入中</strong><span id="fuel-price-unit" class="text-[10px] text-gray-400">遊戲指數</span></div>
-              <div class="text-[10px] text-gray-400">模擬更新：<span id="fuel-price-date">—</span></div>
-              <div class="text-[10px] text-gray-500">此數值只供遊戲經濟系統測試，並非真實市場報價。</div>
+              <div class="flex flex-wrap items-end justify-between gap-2"><strong id="fuel-price-current" class="text-2xl font-black text-amber-300">載入中</strong><span id="fuel-price-unit" class="text-[10px] text-gray-400">USD / gallon</span></div>
+              <div class="text-[10px] text-gray-400">Jet fuel 報價日期：<span id="fuel-price-date">—</span></div>
+              <div class="flex flex-wrap justify-between gap-2 text-[11px]"><span class="text-gray-400">Brent 原油參考：<strong id="brent-price" class="text-gray-100">—</strong> <span id="brent-date" class="text-gray-500"></span></span><span class="text-gray-500">每小時重新查詢；來源按交易日更新</span></div>
               <div class="h-36 w-full"><canvas id="fuelChart"></canvas></div>
-              
+              <a class="text-[10px] text-sky-400 underline" href="https://www.eia.gov/dnav/pet/hist/EER_EPJK_PF4_RGC_DPGD.htm" target="_blank" rel="noopener">EIA 原始航空燃油價格資料</a>
             </div>
           </div>
         </div>
@@ -233,16 +233,25 @@
       </div>
     </div>
 
-    <!-- VIEW: 合同夥伴 -->
+    <!-- VIEW: 合同管理 -->
     <div id="view-partners" class="spa-view hidden space-y-3 font-mono">
-      <div class="as-box p-3 space-y-3">
-        <div class="as-header-box">🤝 合同夥伴 (Contractual Partners)</div>
-        <table class="w-full text-left border border-[#2d3748] text-xs">
-          <tr class="bg-[#141923] text-gray-400"><th>合作夥伴類型</th><th>廠商名稱</th><th>合同期限</th><th>服務品質評分</th></tr>
-          <tr class="border-t border-gray-800"><td>機上空廚膳食</td><td>SATS Catering Ltd</td><td>2028-12-31</td><td class="text-emerald-400">92 / 100</td></tr>
-          <tr class="border-t border-gray-800"><td>地面勤務代理</td><td>Swissport International</td><td>2027-06-30</td><td class="text-emerald-400">88 / 100</td></tr>
-        </table>
-      </div>
+      <section class="as-box p-3 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div><div class="as-header-box !bg-transparent !border-0 !p-0">📑 合同管理 · CONTRACT MANAGEMENT</div><p class="text-[10px] text-gray-400 mt-1">可新增、修改及取消合同；取消後保留歷史紀錄。</p></div>
+          <button type="button" onclick="window.openContractEditor()" class="bg-blue-900 border border-blue-600 text-blue-100 px-3 py-2 text-xs">＋ 新增合同</button>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+          <div class="bg-[#141923] border border-[#2d3748] p-2"><span class="text-gray-500 block">全部合同</span><strong id="contracts-total" class="text-lg">0</strong></div>
+          <div class="bg-[#141923] border border-[#2d3748] p-2"><span class="text-gray-500 block">生效中</span><strong id="contracts-active" class="text-lg text-emerald-400">0</strong></div>
+          <div class="bg-[#141923] border border-[#2d3748] p-2"><span class="text-gray-500 block">已取消</span><strong id="contracts-cancelled" class="text-lg text-rose-400">0</strong></div>
+          <div class="bg-[#141923] border border-[#2d3748] p-2"><span class="text-gray-500 block">90日內到期</span><strong id="contracts-expiring" class="text-lg text-amber-300">0</strong></div>
+        </div>
+        <div class="overflow-x-auto"><table class="w-full text-left border border-[#2d3748] text-xs">
+          <thead class="bg-[#141923] text-gray-400"><tr><th>類型</th><th>供應商</th><th>服務範圍</th><th>費用</th><th>期限</th><th>狀態</th><th>操作</th></tr></thead>
+          <tbody id="contracts-table-body" class="divide-y divide-gray-800"></tbody>
+        </table></div>
+        <p id="contracts-empty" class="hidden text-center text-xs text-gray-500 py-6">暫時沒有合同，按「新增合同」建立第一份。</p>
+      </section>
     </div>
 
     <!-- VIEW: 事實與數據 -->
@@ -530,21 +539,9 @@
       <div class="as-box p-3 space-y-2">
         <div class="as-header-box">⛽ JET-A1 燃油現貨市場與期貨避險合約</div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
-          <div class="bg-[#141923] p-2.5 border border-[#2d3748]">
-            <span class="text-gray-400 block text-[10px]">遊戲燃油成本指數（模擬）</span>
-            <span id="finance-fuel-price" class="text-lg font-bold text-amber-400">100.0（模擬）</span>
-            <span id="finance-fuel-date" class="block text-[10px] text-gray-500">非真實市場報價</span>
-          </div>
-          <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
-            <span class="text-gray-400 block text-[10px]">4 週模擬避險（非即時報價）</span>
-            <span class="text-sm font-bold text-gray-200">$840 / 噸</span>
-            <button onclick="alert('已成功鎖定 4 週期貨合約')" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] hover:bg-blue-800">鎖定 4 週 ($50k)</button>
-          </div>
-          <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
-            <span class="text-gray-400 block text-[10px]">12 週模擬避險（非即時報價）</span>
-            <span class="text-sm font-bold text-gray-200">$860 / 噸</span>
-            <button onclick="alert('已成功鎖定 12 週期貨合約')" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] hover:bg-blue-800">鎖定 12 週 ($120k)</button>
-          </div>
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748]"><span class="text-gray-400 block text-[10px]">EIA Jet Fuel · Gulf Coast</span><strong id="finance-fuel-price" class="text-lg font-bold text-amber-400">載入中</strong><span id="finance-fuel-date" class="block text-[10px] text-gray-500">等待官方觀測值</span></div>
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748]"><span class="text-gray-400 block text-[10px]">Brent Crude · Europe（參考）</span><strong id="finance-brent-price" class="text-lg font-bold text-gray-100">載入中</strong><span id="finance-brent-date" class="block text-[10px] text-gray-500">等待官方觀測值</span></div>
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748]"><span class="text-gray-400 block text-[10px]">更新方式</span><strong class="text-lg font-bold text-emerald-400">每小時查詢</strong><span class="block text-[10px] text-gray-500">只在來源發布新交易日數據時更新報價</span></div>
         </div>
       </div>
     </div>
@@ -552,6 +549,25 @@
   </main>
 
   <!-- MODALS 全局彈窗 -->
+  <div id="modal-contract" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100000] hidden items-center justify-center p-4 font-mono">
+    <div class="bg-[#1a202c] border border-[#2d3748] rounded-xl max-w-xl w-full p-4 space-y-3 text-xs max-h-[90vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between border-b border-[#2d3748] pb-2"><strong id="contract-modal-title">新增合同</strong><button type="button" onclick="window.closeModal('modal-contract')" class="text-gray-400">關閉 ×</button></div>
+      <input type="hidden" id="contract-id">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label class="space-y-1"><span class="block text-gray-400">合同類型</span><select id="contract-type" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"><option>地勤服務</option><option>機上餐飲</option><option>燃油供應</option><option>飛機租賃</option><option>維修保養</option><option>聯運協議</option><option>代碼共享</option><option>其他</option></select></label>
+        <label class="space-y-1"><span class="block text-gray-400">合同狀態</span><select id="contract-status" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"><option>生效中</option><option>待生效</option><option>已暫停</option><option>已取消</option></select></label>
+        <label class="space-y-1 sm:col-span-2"><span class="block text-gray-400">供應商／合作夥伴</span><input id="contract-partner" maxlength="80" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200" placeholder="例如：SATS Catering Ltd"></label>
+        <label class="space-y-1 sm:col-span-2"><span class="block text-gray-400">服務範圍</span><input id="contract-scope" maxlength="120" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200" placeholder="例如：RCTP 台北桃園／全航線"></label>
+        <label class="space-y-1"><span class="block text-gray-400">費用</span><input id="contract-fee" type="number" min="0" step="0.01" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200" value="0"></label>
+        <label class="space-y-1"><span class="block text-gray-400">貨幣</span><select id="contract-currency" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"><option>AS$</option><option>USD</option><option>EUR</option><option>JPY</option></select></label>
+        <label class="space-y-1"><span class="block text-gray-400">開始日期</span><input id="contract-start" type="date" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"></label>
+        <label class="space-y-1"><span class="block text-gray-400">到期日期</span><input id="contract-end" type="date" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"></label>
+        <label class="space-y-1 sm:col-span-2"><span class="block text-gray-400">備註／付款條款</span><textarea id="contract-notes" rows="2" maxlength="500" class="w-full bg-[#141923] border border-[#2d3748] p-2 text-gray-200"></textarea></label>
+      </div>
+      <div class="flex flex-wrap justify-end gap-2 pt-2"><button type="button" onclick="window.closeModal('modal-contract')" class="bg-gray-800 text-gray-300 px-4 py-2">返回</button><button type="button" onclick="window.saveContract()" class="bg-blue-900 border border-blue-600 text-blue-100 px-4 py-2">儲存合同</button></div>
+      <p id="contract-form-error" class="text-rose-400 text-[11px]"></p>
+    </div>
+  </div>
   <div id="modal-route" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
     <div class="bg-[#1a202c] border border-[#2d3748] max-w-md w-full p-4 space-y-3 text-xs">
       <div class="flex justify-between border-b border-[#2d3748] pb-2">
@@ -621,6 +637,7 @@
 
   <!-- 主邏輯載入 -->
   <script type="module" src="src/ui/navigation.js"></script>
+  <script type="module" src="src/ui/contracts.js"></script>
   <script type="module" src="src/ui/routeMap.js"></script>
   <script type="module" src="src/ui/fuel.js"></script>
 </body>

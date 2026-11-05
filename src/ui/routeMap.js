@@ -1,92 +1,35 @@
 import { AIRPORTS } from "../engine/flight.js";
-
-const maps = new Map();
-const palette = ["#38bdf8", "#a78bfa", "#34d399", "#f59e0b", "#fb7185"];
-
-function createMap(elementId, zoom) {
-  const element = document.getElementById(elementId);
-  if (!element || !window.L) return null;
-  const map = window.L.map(element, { scrollWheelZoom: true, preferCanvas: true }).setView([25, 125], zoom);
-  window.L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>'
-  }).addTo(map);
-  const layer = window.L.layerGroup().addTo(map);
-  maps.set(elementId, { map, layer });
-  return { map, layer };
+const maps=new Map(), palette=["#38bdf8","#a78bfa","#34d399","#f59e0b","#fb7185"];
+function createMap(id){
+  const el=document.getElementById(id); if(!el||!window.L)return;
+  const map=L.map(el,{scrollWheelZoom:true,preferCanvas:true,worldCopyJump:true}).setView([25,180],2);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,noWrap:false,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>'}).addTo(map);
+  const layer=L.layerGroup().addTo(map);maps.set(id,{map,layer});
 }
-
-function greatCircleSegments(start, end, steps = 64) {
-  const toVector = ([lat, lon]) => {
-    const phi = lat * Math.PI / 180, lambda = lon * Math.PI / 180;
-    return [Math.cos(phi) * Math.cos(lambda), Math.cos(phi) * Math.sin(lambda), Math.sin(phi)];
-  };
-  const a = toVector(start), b = toVector(end);
-  const dot = Math.max(-1, Math.min(1, a[0]*b[0] + a[1]*b[1] + a[2]*b[2]));
-  const omega = Math.acos(dot), sinOmega = Math.sin(omega);
-  const points = [];
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const wa = sinOmega < 1e-8 ? 1 - t : Math.sin((1 - t) * omega) / sinOmega;
-    const wb = sinOmega < 1e-8 ? t : Math.sin(t * omega) / sinOmega;
-    const x = wa*a[0] + wb*b[0], y = wa*a[1] + wb*b[1], z = wa*a[2] + wb*b[2];
-    points.push([Math.atan2(z, Math.hypot(x, y)) * 180 / Math.PI, Math.atan2(y, x) * 180 / Math.PI]);
-  }
-  const segments = [[]];
-  points.forEach((point, index) => {
-    if (index && Math.abs(point[1] - points[index - 1][1]) > 180) segments.push([]);
-    segments[segments.length - 1].push(point);
-  });
-  return segments.filter(segment => segment.length > 1);
+function unwrap(lon,ref){while(lon-ref>180)lon-=360;while(lon-ref< -180)lon+=360;return lon;}
+function greatCircle(start,end,steps=96){
+  const v=([lat,lon])=>{const p=lat*Math.PI/180,l=lon*Math.PI/180;return [Math.cos(p)*Math.cos(l),Math.cos(p)*Math.sin(l),Math.sin(p)];};
+  const a=v(start),b=v(end),dot=Math.max(-1,Math.min(1,a[0]*b[0]+a[1]*b[1]+a[2]*b[2])),omega=Math.acos(dot),sin=Math.sin(omega),points=[];
+  for(let i=0;i<=steps;i++){const t=i/steps,wa=Math.abs(sin)<1e-8?1-t:Math.sin((1-t)*omega)/sin,wb=Math.abs(sin)<1e-8?t:Math.sin(t*omega)/sin,x=wa*a[0]+wb*b[0],y=wa*a[1]+wb*b[1],z=wa*a[2]+wb*b[2],lat=Math.atan2(z,Math.hypot(x,y))*180/Math.PI,lon=unwrap(Math.atan2(y,x)*180/Math.PI,start[1]+(end[1]-start[1])*t);points.push([lat,lon]);}
+  return points;
 }
-
-function renderRoutes() {
-  if (!window.gameState) return;
-  for (const { map, layer } of maps.values()) {
+function render(){
+  if(!window.gameState)return;
+  for(const {map,layer} of maps.values()){
     layer.clearLayers();
-    const bounds = [];
-    const usedAirports = new Set();
-    (window.gameState.routes || []).forEach((route, index) => {
-      const origin = AIRPORTS[route.origin], destination = AIRPORTS[route.dest];
-      if (!origin || !destination) return;
-      const color = palette[index % palette.length];
-      const start = [origin.lat, origin.lon], end = [destination.lat, destination.lon];
-      greatCircleSegments(start, end).forEach(segment => {
-        window.L.polyline(segment, {
-          color, weight: 3, opacity: 0.9, dashArray: "7 6",
-          lineCap: "round"
-        }).bindPopup(`${route.origin} → ${route.dest}<br>${Number(route.dist || 0).toLocaleString()} km`).addTo(layer);
-      });
-      bounds.push(start, end);
-      for (const [code, airport, point] of [[route.origin, origin, start], [route.dest, destination, end]]) {
-        if (usedAirports.has(code)) continue;
-        usedAirports.add(code);
-        window.L.circleMarker(point, {
-          radius: 6, color: "#e2e8f0", weight: 2, fillColor: color, fillOpacity: 1
-        }).bindPopup(`<strong>${code}</strong><br>${airport.name}`).addTo(layer);
-      }
+    const routes=(window.gameState.routes||[]).filter(r=>AIRPORTS[r.origin]&&AIRPORTS[r.dest]);
+    if(!routes.length){map.setView([25,180],2);continue;}
+    const lons=routes.flatMap(r=>[AIRPORTS[r.origin].lon,AIRPORTS[r.dest].lon]),sx=lons.reduce((s,x)=>s+Math.sin(x*Math.PI/180),0),cx=lons.reduce((s,x)=>s+Math.cos(x*Math.PI/180),0),center=Math.atan2(sx,cx)*180/Math.PI;
+    const bounds=[],markers=new Map();
+    routes.forEach((r,i)=>{
+      const a=AIRPORTS[r.origin],b=AIRPORTS[r.dest],start=[a.lat,unwrap(a.lon,center)],end=[b.lat,unwrap(b.lon,unwrap(a.lon,center))],path=greatCircle(start,end);
+      L.polyline(path,{color:palette[i%palette.length],weight:3.5,opacity:.95,lineCap:"round"}).bindPopup(r.origin+" → "+r.dest+"<br>"+Number(r.dist||0).toLocaleString()+" km").addTo(layer);
+      bounds.push(...path);markers.set(r.origin,{airport:a,point:start});markers.set(r.dest,{airport:b,point:end});
     });
-    if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 5 });
-    else map.setView([25, 125], 3);
-    map.invalidateSize();
+    for(const [code,item] of markers)L.circleMarker(item.point,{radius:6,color:"#e2e8f0",weight:2,fillColor:"#0ea5e9",fillOpacity:1}).bindPopup("<strong>"+code+"</strong><br>"+item.airport.name).addTo(layer);
+    map.fitBounds(bounds,{padding:[30,30],maxZoom:5});
   }
 }
-
-function initMaps() {
-  if (!window.L) {
-    document.querySelectorAll(".aerosim-map").forEach(el => {
-      el.textContent = "地圖服務未能載入，請檢查網絡連線。";
-    });
-    return;
-  }
-  createMap("overview-route-map", 3);
-  createMap("route-network-map", 3);
-  renderRoutes();
-}
-
-window.refreshRouteMaps = () => {
-  renderRoutes();
-  for (const { map } of maps.values()) map.invalidateSize();
-};
-
-document.addEventListener("DOMContentLoaded", initMaps);
+function init(){if(!window.L){document.querySelectorAll(".aerosim-map").forEach(e=>e.textContent="地圖載入失敗，請檢查網絡。");return;}createMap("overview-route-map");createMap("route-network-map");window.refreshRouteMaps();}
+window.refreshRouteMaps=()=>requestAnimationFrame(()=>{for(const {map} of maps.values())map.invalidateSize();render();});
+document.addEventListener("DOMContentLoaded",init);

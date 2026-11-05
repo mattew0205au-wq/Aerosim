@@ -38,7 +38,7 @@ header {
   backdrop-filter: blur(16px);
 }
 header > div:first-child { background: rgba(8, 14, 26, .82) !important; border-color: var(--as-border) !important; }
-nav { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+nav { overflow: visible; flex-wrap: wrap; position: relative; z-index: 60; }
 nav .dropdown { flex: 0 0 auto; border-radius: 7px 7px 0 0; }
 .dropdown-menu {
   display: none;
@@ -101,9 +101,9 @@ main input[type="range"] { min-height: 0; }
   body { font-size: 12px; }
   header > div:first-child { align-items: flex-start; gap: 8px; flex-wrap: wrap; }
   header > div:first-child > div { flex-wrap: wrap; gap: 7px; }
-  nav { padding-left: 8px !important; padding-right: 8px !important; }
+  nav { padding-left: 8px !important; padding-right: 8px !important; overflow: visible !important; flex-wrap: wrap !important; }
   nav .dropdown { padding-left: 10px !important; padding-right: 10px !important; }
-  .dropdown-menu { position: fixed !important; left: 8px !important; right: 8px !important; top: auto !important; width: auto !important; max-width: none !important; }
+  .dropdown-menu { position: fixed !important; left: 8px !important; right: 8px !important; width: auto !important; max-width: none !important; max-height: min(68vh, 520px); }
   main { padding: 10px !important; }
   #as-ops-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   main .grid { min-width: 0; }
@@ -120,3 +120,4 @@ main input[type="range"] { min-height: 0; }
 .leaflet-container { font: 12px/1.5 Inter, system-ui, sans-serif; background: #0b1424; }
 .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #111b2e; color: #e5edf8; }
 .leaflet-control-attribution { font-size: 10px !important; }
+\nheader { isolation: isolate; }\nheader nav { overflow: visible !important; }\nheader nav .dropdown { position: relative; }\nheader nav .dropdown-menu { z-index: 1200 !important; min-width: min(280px, calc(100vw - 24px)); }\n#modal-contract:not(.hidden) { display: flex; }\n#contracts-table-body td { vertical-align: middle; padding: 9px 10px; }\n@media (max-width: 720px) { header nav { row-gap: 2px; } }\n
