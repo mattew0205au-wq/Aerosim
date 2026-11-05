@@ -3,59 +3,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AeroSim Empire - 航空簽派管理主控台 (Operations Dispatch Console)</title>
-  <!-- 核心 CDN 庫 -->
+  <title>AeroSim Empire - 專業航空簽派與營運控制中心 (OCC Console)</title>
+  <!-- 核心 CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* 硬核簽派 console 風格：等寬字體、高數據密度、無多餘發光與圓角 */
     body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 11px; line-height: 1.4; }
-    #map { height: 420px; width: 100%; z-index: 1; border: 1px solid #27272a; }
+    #map { height: 400px; width: 100%; z-index: 1; border: 1px solid #27272a; }
     .leaflet-tile-pane { filter: brightness(0.5) invert(1) contrast(2) hue-rotate(180deg) saturate(0.2); }
     .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 0px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; }
     .custom-scroll::-webkit-scrollbar-track { background: #09090b; }
-    table td, table th { padding: 4px 8px; white-space: nowrap; }
+    table td, table th { padding: 5px 8px; white-space: nowrap; }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200 min-h-screen flex flex-col custom-scroll selection:bg-blue-900 selection:text-white">
 
-  <!-- 1. 專業簽派台頂部狀態列 (Header Bar) -->
+  <!-- 1. 專業簽派台頂部狀態列 -->
   <header class="bg-zinc-900 border-b border-zinc-800 px-3 py-1.5 sticky top-0 z-40 flex items-center justify-between text-xs">
     <div class="flex items-center space-x-3">
       <div class="bg-blue-900/90 border border-blue-600 text-blue-200 px-2 py-0.5 font-bold tracking-widest text-xs">
-        DISPATCH CONSOLE v1.2.0
+        DISPATCH CONSOLE v1.5.0
       </div>
       <div class="flex items-center space-x-2">
         <span class="text-zinc-100 font-bold">星空亞洲航空 (STAR ASIA AIRWAYS)</span>
         <span class="text-zinc-600">|</span>
-        <span class="text-zinc-400">無線電呼號: <strong class="text-blue-400">STARASIA</strong></span>
+        <span class="text-zinc-400">呼號: <strong class="text-blue-400">STARASIA</strong></span>
         <span class="text-zinc-600">|</span>
         <span class="text-zinc-400">代碼: <strong class="text-zinc-200">SAA / TWN</strong></span>
       </div>
     </div>
     
-    <!-- 頂部資產與即時運航資訊 -->
     <div class="flex items-center space-x-4">
       <div class="text-right">
-        <span class="text-zinc-500 text-[10px] block leading-none">現金儲備 (CASH BALANCE)</span>
-        <span class="text-emerald-400 font-bold text-sm">$12,480,500 <span class="text-[10px] text-zinc-500">AS$</span></span>
+        <span class="text-zinc-500 text-[10px] block leading-none">現金儲備 (CASH)</span>
+        <span id="cash-display" class="text-emerald-400 font-bold text-sm">$12,480,500 <span class="text-[10px] text-zinc-500">AS$</span></span>
       </div>
       <div class="border-r border-zinc-800 h-6"></div>
       <div class="text-right">
-        <span class="text-zinc-500 text-[10px] block leading-none">每週營運預算 (WEEKLY FLOW)</span>
-        <span class="text-emerald-400 font-bold text-sm">+$684,200</span>
+        <span class="text-zinc-500 text-[10px] block leading-none">Jet-A1 即時燃油價</span>
+        <span id="fuel-price-display" class="text-amber-400 font-bold text-sm">$820 <span class="text-[10px] text-zinc-500">/噸</span></span>
       </div>
       <div class="border-r border-zinc-800 h-6"></div>
       <div class="text-right">
-        <span class="text-zinc-500 text-[10px] block leading-none">樞紐即時氣象 (RCTP METAR)</span>
-        <span class="text-zinc-300 text-[10px]">25008KT 9999 FEW030 24/18 Q1015</span>
+        <span class="text-zinc-500 text-[10px] block leading-none">燃油期貨避險</span>
+        <span id="hedge-status-display" class="text-zinc-400 text-xs">未鎖定 (浮動中)</span>
       </div>
       <div class="border-r border-zinc-800 h-6"></div>
-      <!-- 時鐘控制項 -->
+      <!-- 時鐘控制 -->
       <div class="bg-zinc-950 border border-zinc-800 px-2.5 py-1 flex items-center space-x-2">
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <div>
@@ -69,36 +67,34 @@
     </div>
   </header>
 
-  <!-- 2. 功能導覽分頁列 (Tab Switcher) -->
+  <!-- 2. 功能分頁導覽列 -->
   <nav class="bg-zinc-900/90 border-b border-zinc-800 px-3 flex space-x-1 font-mono text-xs sticky top-[41px] z-30">
     <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active bg-zinc-950 text-blue-400 border-t-2 border-blue-500 px-3.5 py-2 flex items-center space-x-1.5 border-x border-zinc-800">
-      <i data-lucide="activity" class="w-3.5 h-3.5"></i><span>[F1] 簽派主控台 (DISPATCH)</span>
+      <i data-lucide="activity" class="w-3.5 h-3.5"></i><span>[F1] 簽派主控台</span>
     </button>
     <button onclick="switchTab('fleet')" id="tab-btn-fleet" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="plane" class="w-3.5 h-3.5"></i><span>[F2] 機隊與客艙配置 (FLEET & CABIN)</span>
+      <i data-lucide="plane" class="w-3.5 h-3.5"></i><span>[F2] 機隊與客艙藍圖</span>
     </button>
     <button onclick="switchTab('schedule')" id="tab-btn-schedule" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="calendar" class="w-3.5 h-3.5"></i><span>[F3] 168h 輪班甘特圖 (168H GANTT)</span>
+      <i data-lucide="calendar" class="w-3.5 h-3.5"></i><span>[F3] 168h 動態排班甘特圖</span>
     </button>
     <button onclick="switchTab('routes')" id="tab-btn-routes" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="route" class="w-3.5 h-3.5"></i><span>[F4] 航線網絡 & ORS 評分 (ROUTES)</span>
+      <i data-lucide="route" class="w-3.5 h-3.5"></i><span>[F4] 航線網絡 & ORS 矩陣</span>
     </button>
     <button onclick="switchTab('finance')" id="tab-btn-finance" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>[F5] 財務綜合帳款 (FINANCE P&L)</span>
+      <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>[F5] 財務與期貨避險</span>
     </button>
   </nav>
 
-  <!-- 3. 主工作區 (Workspace) -->
+  <!-- 3. 主工作區 Workspace -->
   <main class="flex-1 p-3 space-y-3 max-w-[1700px] w-full mx-auto">
 
-    <!-- ==================== [F1] 簽派主控台 (DISPATCH DASHBOARD) ==================== -->
+    <!-- ==================== [F1] 簽派主控台 ==================== -->
     <div id="view-dashboard" class="tab-view space-y-3">
-      
-      <!-- 高密度 KPI 數據列 -->
       <div class="grid grid-cols-2 md:grid-cols-8 gap-2 font-mono">
         <div class="bg-zinc-900 border border-zinc-800 p-2">
           <span class="text-zinc-500 block text-[10px]">現役機隊規模</span>
-          <span class="text-sm font-bold text-zinc-100">16 <span class="text-[10px] font-normal text-zinc-500">架</span></span>
+          <span id="kpi-fleet-count" class="text-sm font-bold text-zinc-100">16 <span class="text-[10px] font-normal text-zinc-500">架</span></span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
           <span class="text-zinc-500 block text-[10px]">營運航線對</span>
@@ -109,8 +105,8 @@
           <span class="text-sm font-bold text-emerald-400">86.4%</span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">機隊週利用率</span>
-          <span class="text-sm font-bold text-amber-400">118.2 <span class="text-[10px] font-normal text-zinc-500">小時</span></span>
+          <span class="text-zinc-500 block text-[10px]">機隊平均週利用率</span>
+          <span id="kpi-utilization" class="text-sm font-bold text-amber-400">118.2 <span class="text-[10px] font-normal text-zinc-500">小時</span></span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
           <span class="text-zinc-500 block text-[10px]">每週淨營運利潤</span>
@@ -125,14 +121,12 @@
           <span class="text-sm font-bold text-emerald-400">94.1%</span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">燃油儲備庫存</span>
-          <span class="text-sm font-bold text-zinc-200">14,200 <span class="text-[10px] font-normal text-zinc-500">噸</span></span>
+          <span class="text-zinc-500 block text-[10px]">機隊平均機況</span>
+          <span id="kpi-avg-cond" class="text-sm font-bold text-emerald-400">91.2%</span>
         </div>
       </div>
 
-      <!-- 航網地圖與簽派指令面板 Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        <!-- 航線地圖 (佔 3 欄) -->
         <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 p-2 space-y-2">
           <div class="flex justify-between items-center px-1 font-mono">
             <span class="text-zinc-400 font-bold flex items-center space-x-1.5">
@@ -144,46 +138,35 @@
           <div id="map"></div>
         </div>
 
-        <!-- 右側：簽派指令與 ACARS 即時電報 Log -->
         <div class="space-y-3 flex flex-col font-mono">
           <div class="bg-zinc-900 border border-zinc-800 p-2.5 space-y-2">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">簽派快捷指令 (COMMAND PALETTE)</span>
+            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">簽派快捷指令</span>
             <button onclick="openModal('modal-route')" class="w-full bg-blue-900/60 hover:bg-blue-800 border border-blue-700 text-blue-200 py-1.5 px-2 text-left flex items-center justify-between">
               <span>> 申請新航線開航許可</span>
               <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
             </button>
             <button onclick="openModal('modal-lease')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> 進入全球飛機租賃市場</span>
+              <span>> 進入新機/二手飛機市場</span>
               <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
             </button>
-            <button onclick="switchTab('fleet')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> 調整機隊客艙配置與間距</span>
-              <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            <button onclick="switchTab('schedule')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
+              <span>> 開啟 168h 動態排班編輯器</span>
+              <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
             </button>
             <button onclick="switchTab('finance')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> 查看本週損益明細 (P&L)</span>
-              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+              <span>> 管理燃油期貨避險合約</span>
+              <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
             </button>
           </div>
 
-          <!-- 即時電報通知清單 -->
           <div class="bg-zinc-900 border border-zinc-800 p-2.5 flex-1 flex flex-col justify-between space-y-2">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">ACARS / 即時運航電報日誌</span>
+            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">ACARS / 運航電報日誌</span>
             <div id="log-container" class="space-y-1.5 text-[10px] font-mono custom-scroll max-h-56 overflow-y-auto pr-1">
               <div class="border-l-2 border-emerald-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">14:10 UTC</span> | 航班 SAA801 順利降落 RJAA (成田)，載客率 94.2%，淨收益 $18,400 AS$。
+                <span class="text-zinc-500">14:10 UTC</span> | 航班 SAA801 降落 RJAA (成田)，載客率 94.2%。
               </div>
               <div class="border-l-2 border-amber-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">13:45 UTC</span> | 飛機 B-16703 抵達 A 級定期檢修週期，已自動安排於 RCTP 基地。
-              </div>
-              <div class="border-l-2 border-blue-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">12:00 UTC</span> | 扣除每週機隊租賃流水與保管費: -$280,000 AS$。
-              </div>
-              <div class="border-l-2 border-emerald-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">09:30 UTC</span> | 航班 SAA008 (RCTP-KLAX) 已經起飛，頭等艙與商務艙售罄。
-              </div>
-              <div class="border-l-2 border-zinc-600 pl-1.5 py-0.5 text-zinc-400">
-                <span class="text-zinc-500">06:00 UTC</span> | 簽派中心完成當日第 1 波次 12 架次航班出港結算。
+                <span class="text-zinc-500">13:45 UTC</span> | 飛機 B-16703 (二手 ATR72) 機況下滑至 65%，建議進行 B-Check。
               </div>
             </div>
           </div>
@@ -191,89 +174,35 @@
       </div>
     </div>
 
-    <!-- ==================== [F2] 機隊與客艙配置 (FLEET & CABIN) ==================== -->
+    <!-- ==================== [F2] 機隊與客艙藍圖 ==================== -->
     <div id="view-fleet" class="tab-view hidden space-y-3 font-mono">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
-        
-        <!-- 左側：高密度機隊清單 (佔 1 欄) -->
         <div class="bg-zinc-900 border border-zinc-800 p-2.5 space-y-2">
           <div class="flex justify-between items-center border-b border-zinc-800 pb-1">
-            <span class="text-zinc-300 font-bold">現役機隊名冊 (16 架)</span>
-            <button onclick="openModal('modal-lease')" class="text-[10px] text-blue-400 hover:underline">+ 引進新機</button>
+            <span class="text-zinc-300 font-bold">現役機隊名冊</span>
+            <button onclick="openModal('modal-lease')" class="text-[10px] text-blue-400 hover:underline">+ 引進/購買</button>
           </div>
-          <div class="space-y-1.5 custom-scroll max-h-[540px] overflow-y-auto pr-1">
-            
-            <div onclick="selectAircraft('B-16701', 'Boeing 737-800', 162, 12, 150, 95)" class="fleet-row bg-zinc-950 border border-blue-600 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
-              <div>
-                <span class="text-blue-400 font-bold">B-16701</span> <span class="text-zinc-500 text-[10px]">B738</span>
-                <span class="block text-[10px] text-zinc-400">RCTP ⇄ RJAA (每日 2 班)</span>
-              </div>
-              <div class="text-right">
-                <span class="text-emerald-400 font-bold block">機況 95%</span>
-                <span class="text-[10px] text-zinc-500">162 席 (12/150)</span>
-              </div>
-            </div>
-
-            <div onclick="selectAircraft('B-16702', 'Airbus A350-900', 306, 32, 274, 88)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
-              <div>
-                <span class="text-zinc-200 font-bold">B-16702</span> <span class="text-zinc-500 text-[10px]">A359</span>
-                <span class="block text-[10px] text-zinc-400">RCTP ⇄ KLAX (跨洋長程)</span>
-              </div>
-              <div class="text-right">
-                <span class="text-emerald-400 font-bold block">機況 88%</span>
-                <span class="text-[10px] text-zinc-500">306 席 (32/274)</span>
-              </div>
-            </div>
-
-            <div onclick="selectAircraft('B-16703', 'ATR 72-600', 70, 0, 70, 65)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
-              <div>
-                <span class="text-zinc-200 font-bold">B-16703</span> <span class="text-zinc-500 text-[10px]">AT76</span>
-                <span class="block text-[10px] text-zinc-400">RCTP ⇄ RCFG (離島支線)</span>
-              </div>
-              <div class="text-right">
-                <span class="text-amber-400 font-bold block">保養中 (65%)</span>
-                <span class="text-[10px] text-zinc-500">70 席 (0/70)</span>
-              </div>
-            </div>
-
-            <div onclick="selectAircraft('B-16704', 'Airbus A321neo', 198, 16, 182, 99)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
-              <div>
-                <span class="text-zinc-200 font-bold">B-16704</span> <span class="text-zinc-500 text-[10px]">A21N</span>
-                <span class="block text-[10px] text-zinc-400">RCTP ⇄ WSSS (新加坡)</span>
-              </div>
-              <div class="text-right">
-                <span class="text-emerald-400 font-bold block">機況 99%</span>
-                <span class="text-[10px] text-zinc-500">198 席 (16/182)</span>
-              </div>
-            </div>
-
-            <div onclick="selectAircraft('B-16705', 'Boeing 787-9', 290, 26, 264, 91)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
-              <div>
-                <span class="text-zinc-200 font-bold">B-16705</span> <span class="text-zinc-500 text-[10px]">B789</span>
-                <span class="block text-[10px] text-zinc-400">VHHH ⇄ EGLL (倫敦)</span>
-              </div>
-              <div class="text-right">
-                <span class="text-emerald-400 font-bold block">機況 91%</span>
-                <span class="text-[10px] text-zinc-500">290 席 (26/264)</span>
-              </div>
-            </div>
-
+          <div id="fleet-list-container" class="space-y-1.5 custom-scroll max-h-[540px] overflow-y-auto pr-1">
+            <!-- 動態渲染機隊列表 -->
           </div>
         </div>
 
-        <!-- 右側：客艙結構藍圖與幾何圖紙 (佔 3 欄) -->
         <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 p-3 space-y-3">
           <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
             <div>
-              <span class="text-zinc-100 font-bold text-sm">客艙配置與幾何結構圖 (CABIN LAYOUT & BLUEPRINT): <span id="selected-reg" class="text-blue-400 font-mono">B-16701</span></span>
+              <span class="text-zinc-100 font-bold text-sm">客艙配置與維護中心: <span id="selected-reg" class="text-blue-400 font-mono">B-16701</span></span>
               <span id="selected-model-info" class="block text-[10px] text-zinc-500">BOEING 737-800 | 客艙寬度: 3.54 米 | 最大密裝限制: 189 席</span>
             </div>
-            <button onclick="saveCabinConfig()" class="bg-blue-900 border border-blue-600 text-blue-200 px-3 py-1 font-bold hover:bg-blue-800">
-              套用改艙方案 (支出 $50,000 AS$)
-            </button>
+            <div class="flex space-x-2">
+              <button onclick="openMaintenanceModal()" class="bg-amber-900 border border-amber-600 text-amber-200 px-2.5 py-1 text-xs font-bold hover:bg-amber-800">
+                🛠️ A/B/C 級維護大修
+              </button>
+              <button onclick="alert('改艙方案已生效！支出 $50,000 AS$');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">
+                套用改艙方案 ($50k)
+              </button>
+            </div>
           </div>
 
-          <!-- 座位數與間距滑桿控制區 -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-zinc-950 p-3 border border-zinc-800">
             <div>
               <label class="text-zinc-300 block text-[10px] mb-1">商務艙席次 (BUSINESS): <strong id="val-biz-seats" class="text-amber-400 font-mono text-sm">12</strong> 席</label>
@@ -291,111 +220,58 @@
                 <span id="cabin-ors-score" class="text-xl font-bold text-emerald-400 font-mono">88.5</span>
                 <span class="text-zinc-600 text-xs">/ 100 分</span>
               </div>
-              <span class="text-[9px] text-emerald-400">得益於標準商務艙與寬鬆經濟艙配置</span>
+              <span id="selected-cond-display" class="text-[10px] text-emerald-400">當前機況狀態: 95% (優良)</span>
             </div>
           </div>
 
-          <!-- 精密藍圖繪製 SVG 容器 -->
           <div class="bg-zinc-950 border border-zinc-800 p-4 overflow-x-auto flex justify-center custom-scroll">
             <svg id="cabin-svg" width="760" height="150" viewBox="0 0 760 150" class="max-w-full">
-              <!-- JS 動態生成圖紙 SVG -->
+              <!-- SVG 座位圖 -->
             </svg>
           </div>
-
-          <!-- 客艙圖例與維護數據 -->
-          <div class="flex justify-between items-center text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 font-mono">
-            <div class="flex space-x-4">
-              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>商務艙 (Business Class)</span>
-              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-600 inline-block mr-1"></span>經濟艙 (Economy Class)</span>
-              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-800 border border-zinc-700 inline-block mr-1"></span>駕駛艙 / 洗手間 (Galley/Lavatory)</span>
-            </div>
-            <span>下次 C 級大修預計: 1,420 飛行小時後</span>
-          </div>
         </div>
-
       </div>
     </div>
 
-    <!-- ==================== [F3] 168小時甘特圖排班 (168H GANTT SCHEDULER) ==================== -->
+    <!-- ==================== [F3] 168h 動態排班甘特圖 (168H GANTT) ==================== -->
     <div id="view-schedule" class="tab-view hidden space-y-3 font-mono">
-      <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
+      <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-3">
         <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
           <div>
-            <span class="text-zinc-100 font-bold">168 小時每週機隊運航甘特圖矩陣 (168-HOUR FLEET OPERATIONAL GANTT)</span>
-            <span class="block text-[10px] text-zinc-500">週一 00:00 至 週日 24:00 不間斷排班，過站時間（Turnaround）最低限制 45 分鐘</span>
+            <span class="text-zinc-100 font-bold">168 小時動態互動排班甘特圖 (INTERACTIVE GANTT SCHEDULER)</span>
+            <span class="block text-[10px] text-zinc-500">點擊飛機軌道旁邊的【+ 排班】可為指定飛機手動排入航班，系統將自動計算飛行時間與 45 分鐘過站整備。</span>
           </div>
           <div class="flex items-center space-x-3 text-[10px] text-zinc-400">
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-800 border border-blue-500 inline-block mr-1"></span>巡航飛行 (Flight Sector)</span>
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>過站整備 (Turnaround)</span>
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-950 border border-zinc-800 inline-block mr-1"></span>地面閒置 (Idle)</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-800 border border-blue-500 inline-block mr-1"></span>巡航飛行</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>45m 過站整備</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-950 border border-zinc-800 inline-block mr-1"></span>地面閒置</span>
           </div>
         </div>
 
-        <!-- 168 小時時間軸甘特圖容器 -->
+        <!-- 甘特圖渲染容器 -->
         <div class="overflow-x-auto custom-scroll border border-zinc-800 bg-zinc-950 p-2">
-          <div class="min-w-[1100px] space-y-2">
-            
-            <!-- 7 天 24 小時刻度 -->
-            <div class="grid grid-cols-7 gap-px text-center text-[10px] text-zinc-500 bg-zinc-900 border-b border-zinc-800 py-1">
+          <div class="min-w-[1200px] space-y-3">
+            <!-- 7 天時間刻度標頭 -->
+            <div class="grid grid-cols-7 gap-px text-center text-[10px] text-zinc-500 bg-zinc-900 border-b border-zinc-800 py-1 font-bold">
               <div>週一 (MON 00-24h)</div><div>週二 (TUE 24-48h)</div><div>週三 (WED 48-72h)</div>
               <div>週四 (THU 72-96h)</div><div>週五 (FRI 96-120h)</div><div>週六 (SAT 120-144h)</div><div>週日 (SUN 144-168h)</div>
             </div>
 
-            <!-- 飛機軌道 1 -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] text-zinc-300">
-                <span>軌道 #01: B-16701 (Boeing 737-800) - 台北(RCTP) 基地</span>
-                <span class="text-blue-400">週利用率: 132 小時 (78.5%)</span>
-              </div>
-              <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA801 (RCTP-RJAA)</div>
-                <div class="h-full bg-amber-600 w-1.5" title="過站 45m"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA802 (RJAA-RCTP)</div>
-                <div class="h-full bg-zinc-950 w-4"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA803 (RCTP-RJAA)</div>
-                <div class="h-full bg-amber-600 w-1.5"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA804 (RJAA-RCTP)</div>
-              </div>
+            <!-- 動態甘特圖軌道渲染區 -->
+            <div id="gantt-tracks-container" class="space-y-3">
+              <!-- 由 JS 繪製動態軌道 -->
             </div>
-
-            <!-- 飛機軌道 2 -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] text-zinc-300">
-                <span>軌道 #02: B-16702 (Airbus A350-900) - 跨洋長程線</span>
-                <span class="text-blue-400">週利用率: 148 小時 (88.0%)</span>
-              </div>
-              <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
-                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 42%;">SAA008 (RCTP-KLAX 長程)</div>
-                <div class="h-full bg-amber-600 w-2"></div>
-                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 42%;">SAA009 (KLAX-RCTP 長程)</div>
-              </div>
-            </div>
-
-            <!-- 飛機軌道 3 -->
-            <div class="space-y-1">
-              <div class="flex justify-between text-[10px] text-zinc-300">
-                <span>軌道 #03: B-16704 (Airbus A321neo) - 東南亞區域線</span>
-                <span class="text-blue-400">週利用率: 120 小時 (71.4%)</span>
-              </div>
-              <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 22%;">SAA211 (RCTP-WSSS)</div>
-                <div class="h-full bg-amber-600 w-2"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 22%;">SAA212 (WSSS-RCTP)</div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ==================== [F4] 航線網絡 & ORS 矩陣 (ROUTES & ORS) ==================== -->
+    <!-- ==================== [F4] 航線網絡 & ORS 矩陣 ==================== -->
     <div id="view-routes" class="tab-view hidden space-y-3 font-mono">
       <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
         <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
           <div>
-            <span class="text-zinc-100 font-bold">航線營運分析與 ORS 市場競爭力矩陣 (SECTOR ANALYSIS & ORS MATRIX)</span>
-            <span class="block text-[10px] text-zinc-500">ORS 評分整合票價差額、座椅間距、班次頻率與直飛懲罰權重</span>
+            <span class="text-zinc-100 font-bold">航線網絡營運與 ORS 評分矩陣</span>
           </div>
           <button onclick="openModal('modal-route')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">
             + 開闢新航線
@@ -407,197 +283,283 @@
             <thead>
               <tr class="bg-zinc-950 text-zinc-500 border-b border-zinc-800">
                 <th class="border-r border-zinc-800">航線 Sector</th>
-                <th class="border-r border-zinc-800">大圓距離</th>
-                <th class="border-r border-zinc-800">執飛機型</th>
-                <th class="border-r border-zinc-800">每週班次</th>
-                <th class="border-r border-zinc-800">玩家票價 / 市場基準</th>
-                <th class="border-r border-zinc-800">ORS 競爭力得分</th>
-                <th class="border-r border-zinc-800">載客率 (LF)</th>
+                <th class="border-r border-zinc-800">距離 (km)</th>
+                <th class="border-r border-zinc-800">預估飛行時間</th>
+                <th class="border-r border-zinc-800">推薦機型</th>
+                <th class="border-r border-zinc-800">票價 (玩家 / 基準)</th>
+                <th class="border-r border-zinc-800">ORS 評分</th>
                 <th>估算每週利潤</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-800 bg-zinc-950">
-              <tr class="hover:bg-zinc-900">
-                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ RJAA (東京)</td>
-                <td class="border-r border-zinc-800 text-zinc-400">2,182 km</td>
-                <td class="border-r border-zinc-800 text-blue-400">B737-800</td>
-                <td class="border-r border-zinc-800">14 班/週</td>
-                <td class="border-r border-zinc-800 text-zinc-300">$280 / <span class="text-zinc-600">$310</span></td>
-                <td class="border-r border-zinc-800 text-emerald-400 font-bold">84 / 100</td>
-                <td class="border-r border-zinc-800 text-emerald-400">92.4%</td>
-                <td class="text-emerald-400 font-bold">+$142,000 AS$</td>
-              </tr>
-              <tr class="hover:bg-zinc-900">
-                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ KLAX (洛杉磯)</td>
-                <td class="border-r border-zinc-800 text-zinc-400">10,925 km</td>
-                <td class="border-r border-zinc-800 text-amber-400">A350-900</td>
-                <td class="border-r border-zinc-800">7 班/週</td>
-                <td class="border-r border-zinc-800 text-zinc-300">$950 / <span class="text-zinc-600">$920</span></td>
-                <td class="border-r border-zinc-800 text-amber-400 font-bold">68 / 100</td>
-                <td class="border-r border-zinc-800 text-amber-400">78.1%</td>
-                <td class="text-emerald-400 font-bold">+$385,000 AS$</td>
-              </tr>
-              <tr class="hover:bg-zinc-900">
-                <td class="border-r border-zinc-800 font-bold text-zinc-200">VHHH (香港) ✈ EGLL (倫敦)</td>
-                <td class="border-r border-zinc-800 text-zinc-400">9,594 km</td>
-                <td class="border-r border-zinc-800 text-amber-400">B787-9</td>
-                <td class="border-r border-zinc-800">7 班/週</td>
-                <td class="border-r border-zinc-800 text-zinc-300">$880 / <span class="text-zinc-600">$900</span></td>
-                <td class="border-r border-zinc-800 text-emerald-400 font-bold">79 / 100</td>
-                <td class="border-r border-zinc-800 text-emerald-400">88.6%</td>
-                <td class="text-emerald-400 font-bold">+$210,000 AS$</td>
-              </tr>
-              <tr class="hover:bg-zinc-900">
-                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ WSSS (新加坡)</td>
-                <td class="border-r border-zinc-800 text-zinc-400">3,218 km</td>
-                <td class="border-r border-zinc-800 text-blue-400">A321neo</td>
-                <td class="border-r border-zinc-800">7 班/週</td>
-                <td class="border-r border-zinc-800 text-zinc-300">$340 / <span class="text-zinc-600">$350</span></td>
-                <td class="border-r border-zinc-800 text-emerald-400 font-bold">81 / 100</td>
-                <td class="border-r border-zinc-800 text-emerald-400">85.0%</td>
-                <td class="text-emerald-400 font-bold">+$98,000 AS$</td>
-              </tr>
+            <tbody id="routes-table-body" class="divide-y divide-zinc-800 bg-zinc-950">
+              <!-- 動態渲染航線列表 -->
             </tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ==================== [F5] 財務綜合帳款 (FINANCE P&L) ==================== -->
+    <!-- ==================== [F5] 財務與期貨避險 ==================== -->
     <div id="view-finance" class="tab-view hidden space-y-3 font-mono">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        
-        <!-- 損益細項表 (佔 2 欄) -->
-        <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-3 space-y-3">
-          <span class="text-zinc-100 font-bold block border-b border-zinc-800 pb-1">上週綜合損益分類結算表 (WEEKLY P&L LEDGER)</span>
-          
-          <div class="space-y-2 text-xs">
-            <!-- 收入組 -->
-            <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
-              <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營運收入項目 (OPERATING REVENUES)</span>
-              <div class="flex justify-between"><span class="text-zinc-500">客運機票收入 (Passenger Ticket Revenue)</span><span class="text-emerald-400">+$1,450,000 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">腹艙貨運收入 (Belly Cargo Revenue)</span><span class="text-emerald-400">+$210,000 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">輔助餐飲與選位收入 (Ancillary Revenue)</span><span class="text-emerald-400">+$45,000 AS$</span></div>
-              <div class="flex justify-between font-bold border-t border-zinc-800 pt-1"><span>總營業收入 (Total Revenue)</span><span class="text-emerald-400">+$1,705,000 AS$</span></div>
+        <div class="lg:col-span-2 space-y-3">
+          <!-- 燃油期貨避險交易區 -->
+          <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
+            <span class="text-zinc-100 font-bold block border-b border-zinc-800 pb-1">⛽ JET-A1 燃油現貨市場與期貨避險合約 (FUEL HEDGING)</span>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+              <div class="bg-zinc-950 p-2.5 border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 block text-[10px]">即時現貨價格 (SPOT)</span>
+                <span id="spot-fuel-price" class="text-lg font-bold text-amber-400">$820 <span class="text-xs font-normal text-zinc-500">/ 噸</span></span>
+                <span class="text-[9px] text-zinc-500 block">每週隨國際原油市場浮動</span>
+              </div>
+              <div class="bg-zinc-950 p-2.5 border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 block text-[10px]">4 週短線避險合約</span>
+                <span class="text-sm font-bold text-zinc-200">$840 / 噸</span>
+                <button onclick="buyFuelHedge(840, 4, 50000)" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] mt-1 hover:bg-blue-800">
+                  鎖定 4 週 ($50k 保證金)
+                </button>
+              </div>
+              <div class="bg-zinc-950 p-2.5 border border-zinc-800 space-y-1">
+                <span class="text-zinc-500 block text-[10px]">12 週長線避險合約</span>
+                <span class="text-sm font-bold text-zinc-200">$860 / 噸</span>
+                <button onclick="buyFuelHedge(860, 12, 120000)" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] mt-1 hover:bg-blue-800">
+                  鎖定 12 週 ($120k 保證金)
+                </button>
+              </div>
             </div>
+          </div>
 
-            <!-- 支出組 -->
-            <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
-              <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營運支出項目 (OPERATING EXPENSES)</span>
-              <div class="flex justify-between"><span class="text-zinc-500">Jet-A1 航空燃油耗費 (Aviation Fuel)</span><span class="text-rose-400">-$420,000 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">機隊每週租賃固定費 (Aircraft Leases)</span><span class="text-rose-400">-$280,000 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">機場起降 Slot 與地勤代理費 (Airport/Handling)</span><span class="text-rose-400">-$185,000 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">飛行員與空服員薪資 (Crew Salaries)</span><span class="text-rose-400">-$90,800 AS$</span></div>
-              <div class="flex justify-between"><span class="text-zinc-500">定期保養與定檢預提費 (Maintenance Reserve)</span><span class="text-rose-400">-$45,000 AS$</span></div>
-              <div class="flex justify-between font-bold border-t border-zinc-800 pt-1"><span>總營業支出 (Total Expenses)</span><span class="text-rose-400">-$1,020,800 AS$</span></div>
-            </div>
-
-            <div class="bg-zinc-800 border border-zinc-700 p-2.5 flex justify-between items-center text-sm font-bold">
-              <span>本週淨營業利潤 (NET OPERATING PROFIT)</span>
-              <span class="text-emerald-400 text-base font-mono">+$684,200 AS$</span>
+          <!-- 損益細項表 -->
+          <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
+            <span class="text-zinc-100 font-bold block border-b border-zinc-800 pb-1">上週綜合損益結算表 (P&L LEDGER)</span>
+            <div class="space-y-2 text-xs">
+              <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+                <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營業收入</span>
+                <div class="flex justify-between"><span class="text-zinc-500">客運機票收入</span><span class="text-emerald-400">+$1,450,000 AS$</span></div>
+                <div class="flex justify-between"><span class="text-zinc-500">腹艙貨運收入</span><span class="text-emerald-400">+$210,000 AS$</span></div>
+              </div>
+              <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+                <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營業支出</span>
+                <div class="flex justify-between"><span class="text-zinc-500">Jet-A1 燃油耗費</span><span id="pnl-fuel-cost" class="text-rose-400">-$420,000 AS$</span></div>
+                <div class="flex justify-between"><span class="text-zinc-500">機隊週租金</span><span class="text-rose-400">-$280,000 AS$</span></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- 右側：成本佔比圖表 -->
         <div class="bg-zinc-900 border border-zinc-800 p-3 flex flex-col justify-between">
-          <span class="text-zinc-300 font-bold block border-b border-zinc-800 pb-1">營運成本結構分析 (COST STRUCTURE)</span>
+          <span class="text-zinc-300 font-bold block border-b border-zinc-800 pb-1">營運成本結構分析</span>
           <div class="flex-1 flex items-center justify-center p-2">
             <canvas id="financeChart" class="max-h-60"></canvas>
           </div>
-          <span class="text-[9px] text-zinc-600 text-center block font-mono">自動結算週期: 每週日 UTC 00:00 (MIDNIGHT TICK)</span>
         </div>
-
       </div>
     </div>
 
   </main>
 
-  <!-- 全局 MODAL 彈窗 1: 航線申請 (z-[99999] 徹底壓過地圖) -->
+  <!-- MODAL 1: 申請航線 -->
   <div id="modal-route" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
     <div class="bg-zinc-900 border border-zinc-700 max-w-md w-full p-4 space-y-3 shadow-2xl relative text-xs">
       <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
-        <span class="font-bold text-zinc-100">> 申請航線開航許可權 (SECTOR PERMIT)</span>
+        <span class="font-bold text-zinc-100">> 申請航線開航許可權</span>
         <button onclick="closeModal('modal-route')" class="text-zinc-500 hover:text-white">[X]</button>
       </div>
       <div class="space-y-2">
         <div>
-          <label class="text-zinc-400 block text-[10px]">出發樞紐 (ORIGIN HUB)</label>
-          <select class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
-            <option value="RCTP">RCTP - 台北桃園國際機場 (TAIPEI TAOYUAN)</option>
-            <option value="VHHH">VHHH - 香港國際機場 (HONG KONG INT'L)</option>
+          <label class="text-zinc-400 block text-[10px]">出發樞紐</label>
+          <select id="select-origin" class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+            <option value="RCTP">RCTP - 台北桃園國際機場</option>
+            <option value="VHHH">VHHH - 香港國際機場</option>
           </select>
         </div>
         <div>
-          <label class="text-zinc-400 block text-[10px]">目的機場 (DESTINATION)</label>
-          <select class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
-            <option value="RJAA">RJAA - 東京成田國際機場 (TOKYO NARITA)</option>
-            <option value="KLAX">KLAX - 洛杉磯國際機場 (LOS ANGELES INT'L)</option>
-            <option value="EGLL">EGLL - 倫敦希斯洛機場 (LONDON HEATHROW)</option>
-            <option value="WSSS">WSSS - 新加坡樟宜機場 (SINGAPORE CHANGI)</option>
+          <label class="text-zinc-400 block text-[10px]">目的機場</label>
+          <select id="select-dest" class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+            <option value="RJAA">RJAA - 東京成田國際機場</option>
+            <option value="KLAX">KLAX - 洛杉磯國際機場</option>
+            <option value="EGLL">EGLL - 倫敦希斯洛機場</option>
+            <option value="WSSS">WSSS - 新加坡樟宜機場</option>
           </select>
-        </div>
-        <div class="bg-zinc-950 p-2 border border-zinc-800 space-y-1 font-mono text-[11px]">
-          <div class="flex justify-between"><span class="text-zinc-500">規費支出:</span><span class="text-amber-400 font-bold">$25,000 AS$</span></div>
         </div>
       </div>
       <div class="flex space-x-2 pt-1">
         <button onclick="closeModal('modal-route')" class="w-1/2 bg-zinc-800 text-zinc-300 py-1.5">取消</button>
-        <button onclick="alert('航線開航成功！已支付規費 $25,000 AS$。'); closeModal('modal-route');" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">支付並獲得航權</button>
+        <button onclick="addNewRoute()" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">支付 $25,000 開航</button>
       </div>
     </div>
   </div>
 
-  <!-- 全局 MODAL 彈窗 2: 飛機租賃市場 -->
+  <!-- MODAL 2: 細分機型與二手飛機市場 -->
   <div id="modal-lease" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
-    <div class="bg-zinc-900 border border-zinc-700 max-w-xl w-full p-4 space-y-3 shadow-2xl relative text-xs max-h-[85vh] overflow-y-auto custom-scroll">
+    <div class="bg-zinc-900 border border-zinc-700 max-w-3xl w-full p-4 space-y-3 shadow-2xl relative text-xs max-h-[85vh] overflow-y-auto custom-scroll">
       <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
-        <span class="font-bold text-zinc-100">> 全球飛機租賃市場 (GLOBAL LEASE MARKETPLACE)</span>
+        <span class="font-bold text-zinc-100">> 全球細分機型與二手飛機市場 (AIRCRAFT MARKETPLACE)</span>
         <button onclick="closeModal('modal-lease')" class="text-zinc-500 hover:text-white">[X]</button>
       </div>
       
+      <div id="aircraft-market-list" class="space-y-2">
+        <!-- 動態渲染 20+ 款細分新機與二手機 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: 168h 手動排班排入航班對話框 -->
+  <div id="modal-add-flight" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-zinc-900 border border-zinc-700 max-w-md w-full p-4 space-y-3 shadow-2xl relative text-xs">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+        <span class="font-bold text-zinc-100">> 為飛機 <span id="add-flight-reg" class="text-blue-400"></span> 排入新航班</span>
+        <button onclick="closeModal('modal-add-flight')" class="text-zinc-500 hover:text-white">[X]</button>
+      </div>
       <div class="space-y-2">
-        <!-- 租賃機型 1 -->
-        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+        <div>
+          <label class="text-zinc-400 block text-[10px]">選擇執飛航線</label>
+          <select id="add-flight-route-select" class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+            <!-- 動態選項 -->
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
           <div>
-            <span class="font-bold text-zinc-200 block">Boeing 737-800</span>
-            <span class="text-[10px] text-zinc-500">航程 5,436 km | 最大 189 席 | 耗油 2,500 kg/h</span>
+            <label class="text-zinc-400 block text-[10px]">起飛星期 (DAY)</label>
+            <select id="add-flight-day" class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+              <option value="0">週一 (Mon)</option><option value="1">週二 (Tue)</option>
+              <option value="2">週三 (Wed)</option><option value="3">週四 (Thu)</option>
+              <option value="4">週五 (Fri)</option><option value="5">週六 (Sat)</option>
+              <option value="6">週日 (Sun)</option>
+            </select>
           </div>
-          <button onclick="alert('簽約成功！Boeing 737-800 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
-            租賃 $45,000/週
-          </button>
+          <div>
+            <label class="text-zinc-400 block text-[10px]">起飛小時 (0-23 UTC)</label>
+            <input type="number" id="add-flight-hour" min="0" max="23" value="8" class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200 font-mono">
+          </div>
+        </div>
+        <div class="bg-zinc-950 p-2 border border-zinc-800 text-[10px] text-zinc-400 space-y-1">
+          <p>⚠️ 系統會自動加上 <strong class="text-amber-400">45 分鐘過站整備時間 (Turnaround Buffer)</strong>。</p>
+          <p>若與已有航班衝突，簽派系統將自動阻擋排班。</p>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-1">
+        <button onclick="closeModal('modal-add-flight')" class="w-1/2 bg-zinc-800 text-zinc-300 py-1.5">取消</button>
+        <button onclick="confirmScheduleFlight()" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">確認排入甘特圖</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: A/B/C 級維護大修 -->
+  <div id="modal-maintenance" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-zinc-900 border border-zinc-700 max-w-md w-full p-4 space-y-3 shadow-2xl relative text-xs">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+        <span class="font-bold text-zinc-100">> A/B/C 級定檢與大修廠 (MAINTENANCE HANGAR)</span>
+        <button onclick="closeModal('modal-maintenance')" class="text-zinc-500 hover:text-white">[X]</button>
+      </div>
+      <div class="space-y-2">
+        <p class="text-zinc-400">當前選擇飛機: <strong id="maint-reg" class="text-blue-400">B-16701</strong> (機況: <span id="maint-cond" class="text-amber-400">65%</span>)</p>
+        
+        <div class="bg-zinc-950 p-2 border border-zinc-800 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-zinc-200 block">A-Check 輕度維護</span>
+            <span class="text-[10px] text-zinc-500">機況 +10% | 需時 4 小時</span>
+          </div>
+          <button onclick="performMaintenance(10, 15000)" class="bg-blue-900 border border-blue-600 text-blue-200 px-2 py-1 text-[10px]">支出 $15,000</button>
         </div>
 
-        <!-- 租賃機型 2 -->
-        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+        <div class="bg-zinc-950 p-2 border border-zinc-800 flex justify-between items-center">
           <div>
-            <span class="font-bold text-zinc-200 block">Airbus A350-900</span>
-            <span class="text-[10px] text-zinc-500">航程 15,000 km | 最大 440 席 | 耗油 5,800 kg/h</span>
+            <span class="font-bold text-zinc-200 block">B-Check 中度維修</span>
+            <span class="text-[10px] text-zinc-500">機況 +25% | 需時 12 小時</span>
           </div>
-          <button onclick="alert('簽約成功！Airbus A350-900 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
-            租賃 $180,000/週
-          </button>
+          <button onclick="performMaintenance(25, 45000)" class="bg-blue-900 border border-blue-600 text-blue-200 px-2 py-1 text-[10px]">支出 $45,000</button>
         </div>
 
-        <!-- 租賃機型 3 -->
-        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+        <div class="bg-zinc-950 p-2 border border-zinc-800 flex justify-between items-center">
           <div>
-            <span class="font-bold text-zinc-200 block">Airbus A321neo</span>
-            <span class="text-[10px] text-zinc-500">航程 7,400 km | 最大 244 席 | 耗油 2,100 kg/h</span>
+            <span class="font-bold text-amber-400 block">C-Check 重度大修</span>
+            <span class="text-[10px] text-zinc-500">恢復至 100% 機況 | 需時 48 小時</span>
           </div>
-          <button onclick="alert('簽約成功！Airbus A321neo 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
-            租賃 $62,000/週
-          </button>
+          <button onclick="performMaintenance(100, 150000)" class="bg-amber-900 border border-amber-600 text-amber-200 px-2 py-1 text-[10px]">支出 $150,000</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 4. 核心 JavaScript 引擎 -->
+  <!-- 4. 核心 JS 數據庫與排班 conflict 引擎 -->
   <script>
     lucide.createIcons();
 
-    // 1. 分頁切換引擎 (Tab Switcher)
+    // 遊戲全域狀態
+    let gameState = {
+      cash: 12480500,
+      fuelPrice: 820,
+      fuelHedging: null, // { lockedPrice: 840, expireWeeks: 4 }
+      selectedAircraftReg: 'B-16701'
+    };
+
+    // 1. 細分機型數據庫 (20+ 款精確型號，含 A330-200E 等)
+    const aircraftModels = [
+      { id: 'A330-200', name: 'Airbus A330-200', range: 13450, seats: 293, speed: 871, fuel: 5600, lease: 95000, isUsed: false },
+      { id: 'A330-200E', name: 'Airbus A330-200E (242t 增程版)', range: 13750, seats: 293, speed: 871, fuel: 5550, lease: 105000, isUsed: false },
+      { id: 'A330-300', name: 'Airbus A330-300', range: 11750, seats: 375, speed: 871, fuel: 5700, lease: 98000, isUsed: false },
+      { id: 'A330-800neo', name: 'Airbus A330-800neo', range: 15094, seats: 260, speed: 890, fuel: 4800, lease: 125000, isUsed: false },
+      { id: 'A330-900neo', name: 'Airbus A330-900neo', range: 13334, seats: 300, speed: 890, fuel: 4950, lease: 135000, isUsed: false },
+      { id: 'A320neo', name: 'Airbus A320neo', range: 6300, seats: 180, speed: 833, fuel: 2100, lease: 52000, isUsed: false },
+      { id: 'A321LR', name: 'Airbus A321LR (長程窄體)', range: 7400, seats: 220, speed: 833, fuel: 2300, lease: 68000, isUsed: false },
+      { id: 'A321XLR', name: 'Airbus A321XLR (超長程窄體)', range: 8700, seats: 220, speed: 833, fuel: 2350, lease: 78000, isUsed: false },
+      { id: 'A350-900', name: 'Airbus A350-900', range: 15370, seats: 325, speed: 903, fuel: 5800, lease: 180000, isUsed: false },
+      { id: 'A350-1000', name: 'Airbus A350-1000', range: 16100, seats: 410, speed: 903, fuel: 6500, lease: 210000, isUsed: false },
+      { id: 'B737-800', name: 'Boeing 737-800', range: 5436, seats: 189, speed: 842, fuel: 2500, lease: 45000, isUsed: false },
+      { id: 'B737-MAX8', name: 'Boeing 737 MAX 8', range: 6570, seats: 189, speed: 839, fuel: 2150, lease: 58000, isUsed: false },
+      { id: 'B737-MAX10', name: 'Boeing 737 MAX 10', range: 6110, seats: 230, speed: 839, fuel: 2300, lease: 65000, isUsed: false },
+      { id: 'B777-200ER', name: 'Boeing 777-200ER', range: 13080, seats: 313, speed: 892, fuel: 6800, lease: 110000, isUsed: false },
+      { id: 'B777-300ER', name: 'Boeing 777-300ER', range: 13650, seats: 396, speed: 892, fuel: 7500, lease: 165000, isUsed: false },
+      { id: 'B777-9', name: 'Boeing 777-9', range: 13500, seats: 426, speed: 900, fuel: 7100, lease: 220000, isUsed: false },
+      { id: 'B787-8', name: 'Boeing 787-8 Dreamliner', range: 13530, seats: 248, speed: 903, fuel: 4600, lease: 115000, isUsed: false },
+      { id: 'B787-9', name: 'Boeing 787-9 Dreamliner', range: 14010, seats: 296, speed: 903, fuel: 4900, lease: 145000, isUsed: false },
+      { id: 'B787-10', name: 'Boeing 787-10 Dreamliner', range: 11730, seats: 336, speed: 903, fuel: 5300, lease: 160000, isUsed: false },
+      { id: 'A220-300', name: 'Airbus A220-300', range: 6297, seats: 160, speed: 829, fuel: 1800, lease: 42000, isUsed: false },
+      { id: 'E195-E2', name: 'Embraer E195-E2', range: 4815, seats: 146, speed: 870, fuel: 1650, lease: 36000, isUsed: false },
+      { id: 'ATR-72-600', name: 'ATR 72-600', range: 1528, seats: 78, speed: 510, fuel: 650, lease: 18000, isUsed: false },
+      
+      // 特選二手飛機 (Discount Lease, Condition < 65%)
+      { id: 'USED-A330-200E', name: '【二手】Airbus A330-200E (機況 58%)', range: 13750, seats: 293, speed: 871, fuel: 5700, lease: 58000, isUsed: true, condition: 58 },
+      { id: 'USED-B777-200ER', name: '【二手】Boeing 777-200ER (機況 48%)', range: 13080, seats: 313, speed: 892, fuel: 7100, lease: 52000, isUsed: true, condition: 48 },
+      { id: 'USED-B737-800', name: '【二手】Boeing 737-800 (機況 62%)', range: 5436, seats: 189, speed: 842, fuel: 2600, lease: 23000, isUsed: true, condition: 62 }
+    ];
+
+    // 2. 玩家機隊陣列
+    let fleet = [
+      { reg: 'B-16701', modelId: 'B737-800', modelName: 'Boeing 737-800', seats: 162, bizSeats: 12, ecoSeats: 150, condition: 95 },
+      { reg: 'B-16702', modelId: 'A350-900', modelName: 'Airbus A350-900', seats: 306, bizSeats: 32, ecoSeats: 274, condition: 88 },
+      { reg: 'B-16703', modelId: 'USED-A330-200E', modelName: 'Airbus A330-200E', seats: 293, bizSeats: 24, ecoSeats: 269, condition: 58 },
+      { reg: 'B-16704', modelId: 'A321LR', modelName: 'Airbus A321LR', seats: 198, bizSeats: 16, ecoSeats: 182, condition: 99 }
+    ];
+
+    // 3. 航線網絡陣列
+    let routes = [
+      { id: 'R1', origin: 'RCTP', dest: 'RJAA', dist: 2182, speed: 842, fare: 280, baseFare: 310, ors: 84, netProfit: 142000 },
+      { id: 'R2', origin: 'RCTP', dest: 'KLAX', dist: 10925, speed: 903, fare: 950, baseFare: 920, ors: 68, netProfit: 385000 },
+      { id: 'R3', origin: 'VHHH', dest: 'EGLL', dist: 9594, speed: 903, fare: 880, baseFare: 900, ors: 79, netProfit: 210000 },
+      { id: 'R4', origin: 'RCTP', dest: 'WSSS', dist: 3218, speed: 833, fare: 340, baseFare: 350, ors: 81, netProfit: 98000 }
+    ];
+
+    // 4. 168h 班表數據陣列 (記錄每架飛機排入的航班)
+    // startHour: 0 ~ 167 (例如 Mon 08:00 = 8h, Tue 10:00 = 24+10 = 34h)
+    let schedules = {
+      'B-16701': [
+        { routeId: 'R1', flightNo: 'SAA801', startHour: 8, duration: 3.5, turnaround: 0.75 },
+        { routeId: 'R1', flightNo: 'SAA802', startHour: 13, duration: 3.5, turnaround: 0.75 },
+        { routeId: 'R1', flightNo: 'SAA803', startHour: 32, duration: 3.5, turnaround: 0.75 }
+      ],
+      'B-16702': [
+        { routeId: 'R2', flightNo: 'SAA008', startHour: 10, duration: 12.5, turnaround: 0.75 },
+        { routeId: 'R2', flightNo: 'SAA009', startHour: 50, duration: 12.5, turnaround: 0.75 }
+      ],
+      'B-16703': [],
+      'B-16704': [
+        { routeId: 'R4', flightNo: 'SAA211', startHour: 6, duration: 4.2, turnaround: 0.75 }
+      ]
+    };
+
+    // 頁面與 Tab 初始化
     function switchTab(tabId) {
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => {
@@ -610,41 +572,58 @@
       activeBtn.classList.add('bg-zinc-950', 'text-blue-400', 'border-t-2', 'border-blue-500', 'border-x-zinc-800');
 
       if (tabId === 'dashboard') setTimeout(() => map.invalidateSize(), 100);
+      if (tabId === 'schedule') renderGanttScheduler();
+      if (tabId === 'fleet') renderFleetList();
+      if (tabId === 'routes') renderRoutesTable();
     }
 
-    // 2. 免 API Key 暗黑地圖引擎 (Leaflet + OpenStreetMap)
+    // 地圖引擎
     const map = L.map('map').setView([23.5, 121], 3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-    // 標記樞紐機場
-    L.circleMarker([25.0777, 121.2330], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RCTP (台北桃園)</b>");
-    L.circleMarker([35.7647, 140.3863], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RJAA (東京成田)</b>");
-    L.circleMarker([33.9425, -118.4081], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>KLAX (洛杉磯)</b>");
-    L.circleMarker([51.4706, -0.4619], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>EGLL (倫敦希斯洛)</b>");
+    L.circleMarker([25.0777, 121.2330], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RCTP (台北)</b>");
+    L.circleMarker([35.7647, 140.3863], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RJAA (東京)</b>");
+    L.polyline([[25.0777, 121.2330], [35.7647, 140.3863]], { color: '#3b82f6', weight: 1.5 }).addTo(map);
 
-    // 航線連接弧線
-    L.polyline([[25.0777, 121.2330], [35.7647, 140.3863]], { color: '#3b82f6', weight: 1.5, opacity: 0.8 }).addTo(map);
-    L.polyline([[25.0777, 121.2330], [33.9425, -118.4081]], { color: '#f59e0b', weight: 1.5, opacity: 0.6, dashArray: '4, 4' }).addTo(map);
+    // 渲染機隊列表 (F2)
+    function renderFleetList() {
+      const container = document.getElementById('fleet-list-container');
+      container.innerHTML = fleet.map(ac => `
+        <div onclick="selectAircraft('${ac.reg}')" class="fleet-row bg-zinc-950 border ${ac.reg === gameState.selectedAircraftReg ? 'border-blue-600' : 'border-zinc-800'} p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
+          <div>
+            <span class="text-blue-400 font-bold">${ac.reg}</span> <span class="text-zinc-500 text-[10px]">${ac.modelId}</span>
+            <span class="block text-[10px] text-zinc-400">${ac.modelName}</span>
+          </div>
+          <div class="text-right">
+            <span class="${ac.condition < 65 ? 'text-amber-400' : 'text-emerald-400'} font-bold block">機況 ${ac.condition}%</span>
+            <span class="text-[10px] text-zinc-500">${ac.seats} 席 (${ac.bizSeats}/${ac.ecoSeats})</span>
+          </div>
+        </div>
+      `).join('');
+    }
 
-    // 3. SVG 機艙幾何圖紙動態繪製引擎
+    function selectAircraft(reg) {
+      gameState.selectedAircraftReg = reg;
+      const ac = fleet.find(a => a.reg === reg);
+      document.getElementById('selected-reg').innerText = ac.reg;
+      document.getElementById('selected-model-info').innerText = `${ac.modelName.toUpperCase()} | 席次: ${ac.seats} | 當前機況: ${ac.condition}%`;
+      document.getElementById('input-biz-seats').value = ac.bizSeats;
+      document.getElementById('input-eco-seats').value = ac.ecoSeats;
+      document.getElementById('selected-cond-display').innerText = `當前機況狀態: ${ac.condition}% (${ac.condition < 65 ? '警告: 機況偏低' : '良好'})`;
+      updateCabinSVG();
+      renderFleetList();
+    }
+
+    // SVG 客艙繪圖
     function updateCabinSVG() {
       const bizSeats = parseInt(document.getElementById('input-biz-seats').value);
       const ecoSeats = parseInt(document.getElementById('input-eco-seats').value);
       document.getElementById('val-biz-seats').innerText = bizSeats;
       document.getElementById('val-eco-seats').innerText = ecoSeats;
 
-      // 即時算 ORS 分數
-      const ors = (82.0 + (24 - bizSeats) * 0.4 + (180 - ecoSeats) * 0.08).toFixed(1);
-      document.getElementById('cabin-ors-score').innerText = ors;
-
       const svg = document.getElementById('cabin-svg');
       let html = `<path d="M 10,75 Q 40,15 100,15 L 720,15 Q 750,15 750,75 Q 750,135 720,135 L 100,135 Q 40,135 10,75 Z" fill="#09090b" stroke="#27272a" stroke-width="2"/>`;
       
-      // 繪製駕駛艙與前廚房
-      html += `<path d="M 20,65 Q 35,25 60,25 L 60,125 Q 35,125 20,85 Z" fill="#18181b"/>`;
-      html += `<text x="28" y="78" fill="#52525b" font-size="8">PILOT</text>`;
-
-      // 繪製商務艙 (amber 矩形)
       const bizRows = Math.ceil(bizSeats / 4);
       let startX = 75;
       for (let r = 0; r < bizRows; r++) {
@@ -653,13 +632,8 @@
         html += `<rect x="${startX + r*22}" y="80" width="15" height="18" fill="#d97706"/>`;
         html += `<rect x="${startX + r*22}" y="104" width="15" height="18" fill="#d97706"/>`;
       }
-
-      // 隔板 (Divider)
-      startX = startX + bizRows * 22 + 10;
-      html += `<line x1="${startX - 5}" y1="18" x2="${startX - 5}" y2="132" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="2,2"/>`;
-
-      // 繪製經濟艙 (blue 矩形)
       const ecoRows = Math.min(26, Math.ceil(ecoSeats / 6));
+      startX = startX + bizRows * 22 + 10;
       for (let r = 0; r < ecoRows; r++) {
         html += `<rect x="${startX + r*15}" y="25" width="10" height="12" fill="#2563eb"/>`;
         html += `<rect x="${startX + r*15}" y="40" width="10" height="12" fill="#2563eb"/>`;
@@ -668,44 +642,262 @@
         html += `<rect x="${startX + r*15}" y="98" width="10" height="12" fill="#2563eb"/>`;
         html += `<rect x="${startX + r*15}" y="113" width="10" height="12" fill="#2563eb"/>`;
       }
-
       svg.innerHTML = html;
     }
-    updateCabinSVG();
 
-    // 4. 切換飛機選擇
-    function selectAircraft(reg, model, totalSeats, biz, eco, cond) {
-      document.getElementById('selected-reg').innerText = reg;
-      document.getElementById('selected-model-info').innerText = `${model.toUpperCase()} | 總席次: ${totalSeats} | 當前機況: ${cond}%`;
-      document.getElementById('input-biz-seats').value = biz;
-      document.getElementById('input-eco-seats').value = eco;
-      updateCabinSVG();
+    // 5. 核心：168h 動態排班甘特圖繪製與 conflict 檢測 (F3)
+    function renderGanttScheduler() {
+      const container = document.getElementById('gantt-tracks-container');
+      container.innerHTML = fleet.map(ac => {
+        const acSchedules = schedules[ac.reg] || [];
+        
+        // 計算該飛機的每週利用小時數
+        const totalHours = acSchedules.reduce((sum, s) => sum + s.duration, 0).toFixed(1);
+        const utilPct = ((totalHours / 168) * 100).toFixed(1);
+
+        return `
+          <div class="space-y-1 bg-zinc-950 p-2 border border-zinc-800">
+            <div class="flex justify-between items-center text-[10px]">
+              <div>
+                <span class="font-bold text-blue-400 font-mono">${ac.reg}</span>
+                <span class="text-zinc-400 font-mono">(${ac.modelName})</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <span class="text-zinc-300 font-mono">週利用小時: <strong class="text-amber-400">${totalHours}h</strong> (${utilPct}%)</span>
+                <button onclick="openAddFlightModal('${ac.reg}')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2 py-0.5 font-bold hover:bg-blue-800">
+                  + 為這架飛機排班
+                </button>
+              </div>
+            </div>
+
+            <!-- 168h 甘特圖軌道區 -->
+            <div class="h-7 bg-zinc-900 border border-zinc-800 relative w-full overflow-hidden flex items-center">
+              ${acSchedules.map((s, idx) => {
+                const leftPct = (s.startHour / 168) * 100;
+                const flightWidthPct = (s.duration / 168) * 100;
+                const turnaroundWidthPct = (s.turnaround / 168) * 100;
+
+                return `
+                  <!-- 飛行 Sector 區塊 -->
+                  <div class="absolute h-full bg-blue-800 border border-blue-500 flex items-center justify-between px-1 text-[9px] text-zinc-100 font-mono overflow-hidden cursor-pointer hover:bg-blue-700"
+                       style="left: ${leftPct}%; width: ${flightWidthPct}%;" title="${s.flightNo}: 起飛 ${s.startHour}h, 飛行 ${s.duration}h">
+                    <span class="truncate">${s.flightNo}</span>
+                    <button onclick="deleteScheduleSlot('${ac.reg}', ${idx})" class="text-rose-400 font-bold ml-1 hover:text-white" title="刪除航班">[X]</button>
+                  </div>
+                  <!-- 45m 過站整備 Turnaround 區塊 -->
+                  <div class="absolute h-full bg-amber-600"
+                       style="left: ${leftPct + flightWidthPct}%; width: ${turnaroundWidthPct}%;" title="45分鐘過站整備 (Turnaround Buffer)"></div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
-    // 5. 推進模擬時間腳本
+    // 打開手動排班對話框
+    let targetScheduleReg = '';
+    function openAddFlightModal(reg) {
+      targetScheduleReg = reg;
+      document.getElementById('add-flight-reg').innerText = reg;
+      
+      const select = document.getElementById('add-flight-route-select');
+      select.innerHTML = routes.map(r => `<option value="${r.id}">${r.origin} ✈ ${r.dest} (約 ${(r.dist/r.speed + 0.5).toFixed(1)} 小時)</option>`).join('');
+      
+      openModal('modal-add-flight');
+    }
+
+    // 確認手動排班（執行 45m buffer 與 conflict 碰撞檢測）
+    function confirmScheduleFlight() {
+      const routeId = document.getElementById('add-flight-route-select').value;
+      const day = parseInt(document.getElementById('add-flight-day').value);
+      const hour = parseInt(document.getElementById('add-flight-hour').value);
+      
+      const startHour = day * 24 + hour;
+      const route = routes.find(r => r.id === routeId);
+      const flightDuration = Math.round((route.dist / route.speed + 0.5) * 10) / 10;
+      const turnaround = 0.75; // 45 分鐘固定過站整備
+      const totalBlockNeeded = flightDuration + turnaround;
+      const endHour = startHour + totalBlockNeeded;
+
+      // 檢查是否超出 168 小時
+      if (endHour > 168) {
+        alert('⚠️ 排班失敗：航班跨越到下週日 24:00 之後，請選擇較早的起飛時間！');
+        return;
+      }
+
+      // Conflict 碰撞檢測：檢查與既有航班（含 45m turnaround）是否交疊
+      const existing = schedules[targetScheduleReg] || [];
+      for (let s of existing) {
+        const sEnd = s.startHour + s.duration + s.turnaround;
+        if (!(endHour <= s.startHour || startHour >= sEnd)) {
+          alert(`⚠️ 班表時間衝突！\n該時段與航班 [${s.flightNo}] 發生重疊（包含 45 分鐘地面整備時間）。\n請更換時間段或選擇其他時間！`);
+          return;
+        }
+      }
+
+      // 成功排入班表
+      const newFlightNo = `SAA${Math.floor(100 + Math.random() * 899)}`;
+      if (!schedules[targetScheduleReg]) schedules[targetScheduleReg] = [];
+      schedules[targetScheduleReg].push({
+        routeId: route.id,
+        flightNo: newFlightNo,
+        startHour: startHour,
+        duration: flightDuration,
+        turnaround: turnaround
+      });
+
+      alert(`✅ 成功排入航班 ${newFlightNo}！\n起飛：第 ${day+1} 天 ${hour}:00 | 預計飛行：${flightDuration}h (+45m 整備)`);
+      closeModal('modal-add-flight');
+      renderGanttScheduler();
+    }
+
+    // 刪除班表項目
+    function deleteScheduleSlot(reg, index) {
+      schedules[reg].splice(index, 1);
+      renderGanttScheduler();
+    }
+
+    // 6. 細分機型與二手市場 Modal 渲染
+    function renderAircraftMarket() {
+      const container = document.getElementById('aircraft-market-list');
+      container.innerHTML = aircraftModels.map(m => `
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center text-xs font-mono">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-bold text-zinc-100">${m.name}</span>
+              ${m.isUsed ? `<span class="bg-amber-950 text-amber-400 border border-amber-800 text-[9px] px-1">二手 (機況 ${m.condition}%)</span>` : '<span class="bg-blue-950 text-blue-400 border border-blue-800 text-[9px] px-1">全新原廠機</span>'}
+            </div>
+            <span class="text-[10px] text-zinc-500 block mt-0.5">航程 ${m.range.toLocaleString()} km | 最大席次: ${m.seats} | 巡航速: ${m.speed} km/h | 耗油: ${m.fuel} kg/h</span>
+          </div>
+          <div class="text-right">
+            <span class="text-emerald-400 font-bold block">$${m.lease.toLocaleString()} AS$/週</span>
+            <button onclick="leaseNewAircraft('${m.id}')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-[10px] mt-1 hover:bg-blue-800">
+              簽約引進
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function leaseNewAircraft(modelId) {
+      const model = aircraftModels.find(m => m.id === modelId);
+      const newReg = `B-167${Math.floor(10 + Math.random() * 90)}`;
+      fleet.push({
+        reg: newReg,
+        modelId: model.id,
+        modelName: model.name,
+        seats: model.seats,
+        bizSeats: 12,
+        ecoSeats: model.seats - 12,
+        condition: model.isUsed ? model.condition : 100
+      });
+      schedules[newReg] = [];
+      alert(`🎉 成功引進 ${model.name} (${newReg})！已加入機隊名冊。`);
+      closeModal('modal-lease');
+      renderFleetList();
+      document.getElementById('kpi-fleet-count').innerText = `${fleet.length} 架`;
+    }
+
+    // A/B/C 級維護對話框
+    function openMaintenanceModal() {
+      const ac = fleet.find(a => a.reg === gameState.selectedAircraftReg);
+      document.getElementById('maint-reg').innerText = ac.reg;
+      document.getElementById('maint-cond').innerText = `${ac.condition}%`;
+      openModal('modal-maintenance');
+    }
+
+    function performMaintenance(addCond, cost) {
+      if (gameState.cash < cost) {
+        alert('⚠️ 現金儲備不足！無法執行此等級維護。');
+        return;
+      }
+      gameState.cash -= cost;
+      const ac = fleet.find(a => a.reg === gameState.selectedAircraftReg);
+      ac.condition = Math.min(100, ac.condition + addCond);
+      
+      document.getElementById('cash-display').innerHTML = `$${gameState.cash.toLocaleString()} <span class="text-[10px] text-zinc-500">AS$</span>`;
+      alert(`🛠️ 維護保養完成！${ac.reg} 機況提升至 ${ac.condition}%。`);
+      closeModal('modal-maintenance');
+      selectAircraft(ac.reg);
+    }
+
+    // 7. 燃油期貨避險功能
+    function buyFuelHedge(price, weeks, cost) {
+      if (gameState.cash < cost) {
+        alert('⚠️ 保證金不足，無法鎖定期貨合約！');
+        return;
+      }
+      gameState.cash -= cost;
+      gameState.fuelHedging = { lockedPrice: price, expireWeeks: weeks };
+      document.getElementById('cash-display').innerHTML = `$${gameState.cash.toLocaleString()} <span class="text-[10px] text-zinc-500">AS$</span>`;
+      document.getElementById('hedge-status-display').innerText = `已鎖定 $${price}/噸 (${weeks}週)`;
+      alert(`✅ 成功鎖定燃油期貨合約！價格固定為 $${price}/噸，有效期限 ${weeks} 週。`);
+    }
+
+    // 8. 時間 Tick 推進與燃油價格浮動
     let currentHour = 14;
     function tickTime() {
       currentHour = (currentHour + 1) % 24;
       document.getElementById('sim-clock').innerText = `第 42 週 週三 ${currentHour < 10 ? '0' + currentHour : currentHour}:25`;
       
-      // 動態加入 Log
-      const container = document.getElementById('log-container');
-      const newLog = document.createElement('div');
-      newLog.className = "border-l-2 border-blue-500 pl-1.5 py-0.5 text-zinc-300";
-      newLog.innerHTML = `<span class="text-zinc-500">${currentHour}:25 UTC</span> | 模擬 Tick 推進 1 小時，營運數據結算完成。`;
-      container.prepend(newLog);
+      // 每週浮動燃油現貨價格
+      if (Math.random() < 0.2) {
+        gameState.fuelPrice += Math.floor((Math.random() - 0.48) * 30);
+        document.getElementById('fuel-price-display').innerText = `$${gameState.fuelPrice} /噸`;
+        document.getElementById('spot-fuel-price').innerText = `$${gameState.fuelPrice} /噸`;
+      }
     }
 
-    // 6. Modal 彈窗操控
-    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+    // 航線表格渲染 (F4)
+    function renderRoutesTable() {
+      const tbody = document.getElementById('routes-table-body');
+      tbody.innerHTML = routes.map(r => `
+        <tr class="hover:bg-zinc-900">
+          <td class="border-r border-zinc-800 font-bold text-zinc-200">${r.origin} ✈ ${r.dest}</td>
+          <td class="border-r border-zinc-800 text-zinc-400">${r.dist.toLocaleString()} km</td>
+          <td class="border-r border-zinc-800 text-zinc-300">${(r.dist/r.speed + 0.5).toFixed(1)} 小時</td>
+          <td class="border-r border-zinc-800 text-blue-400">${r.dist > 8000 ? 'A350-900 / B787-9' : 'B737-800 / A321neo'}</td>
+          <td class="border-r border-zinc-800 text-zinc-300">$${r.fare} / <span class="text-zinc-600">$${r.baseFare}</span></td>
+          <td class="border-r border-zinc-800 text-emerald-400 font-bold">${r.ors} / 100</td>
+          <td class="text-emerald-400 font-bold">+$${r.netProfit.toLocaleString()} AS$</td>
+        </tr>
+      `).join('');
+    }
+
+    function addNewRoute() {
+      const origin = document.getElementById('select-origin').value;
+      const dest = document.getElementById('select-dest').value;
+      
+      routes.push({
+        id: `R${routes.length+1}`,
+        origin: origin,
+        dest: dest,
+        dist: origin === 'RCTP' && dest === 'KLAX' ? 10925 : 2182,
+        speed: 850,
+        fare: 320,
+        baseFare: 310,
+        ors: 82,
+        netProfit: 120000
+      });
+
+      alert(`✅ 成功獲得 ${origin} ✈ ${dest} 航權許可！`);
+      closeModal('modal-route');
+      renderRoutesTable();
+    }
+
+    function openModal(id) { 
+      document.getElementById(id).classList.remove('hidden'); 
+      if (id === 'modal-lease') renderAircraftMarket();
+    }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // 7. Chart.js 財務圖表渲染
+    // Chart.js 渲染
     const ctx = document.getElementById('financeChart').getContext('2d');
     new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['航空燃油 (Fuel)', '機隊租金 (Lease)', '起降費 (Landing)', '人員薪資 (Salaries)', '保養費用 (Maint)'],
+        labels: ['航空燃油', '機隊租金', '起降規費', '人員薪資', '保養大修'],
         datasets: [{
           data: [420000, 280000, 185000, 90800, 45000],
           backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#6b7280'],
@@ -713,11 +905,13 @@
         }]
       },
       options: {
-        plugins: {
-          legend: { position: 'bottom', labels: { color: '#a1a1aa', font: { size: 10, family: 'monospace' } } }
-        }
+        plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', font: { size: 10, family: 'monospace' } } } }
       }
     });
+
+    // 啟動渲染
+    renderFleetList();
+    selectAircraft('B-16701');
   </script>
 </body>
 </html>
