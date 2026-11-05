@@ -461,7 +461,7 @@
             </div>
             <div class="flex space-x-2">
               <button onclick="window.openMaintenanceModal()" class="bg-amber-900 border border-amber-600 text-amber-200 px-2.5 py-1 text-xs font-bold hover:bg-amber-800">🛠️ A/B/C 級定檢大修</button>
-              <button onclick="alert('客艙配置已成功更新');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">儲存配置 ($50k)</button>
+              <button onclick="window.saveCabinConfiguration()" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">儲存配置 ($50k)</button>
             </div>
           </div>
 
@@ -476,7 +476,8 @@
             </div>
             <div class="border-l border-[#2d3748] pl-3 flex flex-col justify-between">
               <span class="text-gray-400 text-[10px]">ORS 客流舒適度指標</span>
-              <div><span id="cabin-ors-score" class="text-xl font-bold text-emerald-400 font-mono">88.5</span><span class="text-gray-500 text-xs">/ 100</span></div>
+              <div><span id="cabin-ors-score" class="text-xl font-bold text-emerald-400 font-mono">88.5</span><span class="text-gray-500 text-xs">/ 100</span>
+              <span id="cabin-config-status" class="block text-[10px] text-gray-400 mt-1">調整座位後，按「儲存配置」套用</span></div>
             </div>
           </div>
 
