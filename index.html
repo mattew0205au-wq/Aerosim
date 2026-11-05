@@ -172,13 +172,13 @@
             </div>
           </div>
           <div class="as-box">
-            <div class="as-header-box flex items-center justify-between gap-2"><span>真實航空燃油價格 · JET FUEL</span><span id="fuel-source-status" class="text-[10px] text-amber-300">連線中…</span></div>
+            <div class="as-header-box flex items-center justify-between gap-2"><span>燃油成本指數 · 遊戲模擬</span><span id="fuel-source-status" class="text-[10px] text-amber-300">模擬數值</span></div>
             <div class="p-3 space-y-2">
-              <div class="flex items-end justify-between gap-3"><strong id="fuel-price-current" class="text-2xl font-black text-amber-300">載入中</strong><span id="fuel-price-unit" class="text-[10px] text-gray-400">USD / gallon</span></div>
-              <div class="text-[10px] text-gray-400">市場數據日期：<span id="fuel-price-date">—</span></div>
-              <div class="text-[10px] text-gray-500">每小時檢查更新；市場原始報價按交易日發布。</div>
+              <div class="flex items-end justify-between gap-3"><strong id="fuel-price-current" class="text-2xl font-black text-amber-300">載入中</strong><span id="fuel-price-unit" class="text-[10px] text-gray-400">遊戲指數</span></div>
+              <div class="text-[10px] text-gray-400">模擬更新：<span id="fuel-price-date">—</span></div>
+              <div class="text-[10px] text-gray-500">此數值只供遊戲經濟系統測試，並非真實市場報價。</div>
               <div class="h-36 w-full"><canvas id="fuelChart"></canvas></div>
-              <a class="text-[10px] text-sky-400 underline" href="https://fred.stlouisfed.org/series/DJFUELUSGULF" target="_blank" rel="noopener">資料來源：EIA（經 FRED 發布）</a>
+              
             </div>
           </div>
         </div>
@@ -531,9 +531,9 @@
         <div class="as-header-box">⛽ JET-A1 燃油現貨市場與期貨避險合約</div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
           <div class="bg-[#141923] p-2.5 border border-[#2d3748]">
-            <span class="text-gray-400 block text-[10px]">最新已發布現貨價格（EIA）</span>
-            <span id="finance-fuel-price" class="text-lg font-bold text-amber-400">載入中…</span>
-            <span id="finance-fuel-date" class="block text-[10px] text-gray-500">資料日期：—</span>
+            <span class="text-gray-400 block text-[10px]">遊戲燃油成本指數（模擬）</span>
+            <span id="finance-fuel-price" class="text-lg font-bold text-amber-400">100.0（模擬）</span>
+            <span id="finance-fuel-date" class="block text-[10px] text-gray-500">非真實市場報價</span>
           </div>
           <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
             <span class="text-gray-400 block text-[10px]">4 週模擬避險（非即時報價）</span>
