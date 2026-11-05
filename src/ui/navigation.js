@@ -29,7 +29,11 @@ function loadState() {
     return {
       ...structuredClone(DEFAULT_STATE), ...saved,
       company: { ...DEFAULT_STATE.company, ...(saved.company || {}) },
-      fleet: Array.isArray(saved.fleet) ? saved.fleet : structuredClone(DEFAULT_STATE.fleet),
+      fleet: Array.isArray(saved.fleet) ? saved.fleet.map(aircraft => {
+        const model = aircraftModels.find(item => item.id === aircraft.modelId);
+        const capacity = Number(aircraft.capacity) || model?.seats || Number(aircraft.seats) || 0;
+        return { ...aircraft, capacity, seats: Number(aircraft.seats) || capacity };
+      }) : structuredClone(DEFAULT_STATE.fleet),
       routes: Array.isArray(saved.routes) ? saved.routes : structuredClone(DEFAULT_STATE.routes),
       schedules: saved.schedules && typeof saved.schedules === "object" ? saved.schedules : structuredClone(DEFAULT_STATE.schedules)
     };
@@ -136,14 +140,15 @@ window.selectAircraft = function(reg) {
   const aircraft = getAircraft(reg);
   if (!aircraft) return;
   window.gameState.selectedReg = reg;
+  const capacity = Number(aircraft.capacity) || aircraftModels.find(model => model.id === aircraft.modelId)?.seats || aircraft.seats;
   const selected = document.getElementById("selected-reg");
   const info = document.getElementById("selected-model-info");
   const biz = document.getElementById("input-biz-seats");
   const eco = document.getElementById("input-eco-seats");
   if (selected) selected.textContent = aircraft.reg;
-  if (info) info.textContent = `${aircraft.modelName} | 座位數：${aircraft.seats}`;
-  if (biz) biz.value = aircraft.bizSeats;
-  if (eco) eco.value = aircraft.ecoSeats;
+  if (info) info.textContent = `${aircraft.modelName} | ${aircraft.seats} 席（機型上限 ${capacity} 席）`;
+  if (biz) { biz.max = String(capacity); biz.value = aircraft.bizSeats; }
+  if (eco) { eco.max = String(capacity); eco.value = aircraft.ecoSeats; }
   window.updateCabinSVG();
   window.renderFleetList();
   window.saveGame();
@@ -156,28 +161,54 @@ window.updateCabinSVG = function() {
   const bizSeats = Math.max(0, Number(bizInput.value) || 0);
   const ecoSeats = Math.max(0, Number(ecoInput.value) || 0);
   const aircraft = getAircraft(window.gameState.selectedReg);
+  const capacity = Number(aircraft?.capacity) || aircraftModels.find(model => model.id === aircraft?.modelId)?.seats || Number(aircraft?.seats) || 0;
   const total = bizSeats + ecoSeats;
   const bizLabel = document.getElementById("val-biz-seats");
   const ecoLabel = document.getElementById("val-eco-seats");
   if (bizLabel) bizLabel.textContent = bizSeats;
   if (ecoLabel) ecoLabel.textContent = ecoSeats;
   const score = document.getElementById("cabin-ors-score");
-  if (score) score.textContent = Math.max(35, Math.min(100, 100 - Math.abs((aircraft?.seats || total) - total) * .3 - Math.max(0, total - (aircraft?.seats || total)) * .2)).toFixed(1);
+  if (score) score.textContent = Math.max(35, Math.min(100, 100 - Math.abs(capacity - total) * .3 - Math.max(0, total - capacity) * .2)).toFixed(1);
   const svg = document.getElementById("cabin-svg");
-  if (!svg) return;
-  let html = '<path d="M 10,75 Q 40,15 100,15 L 720,15 Q 750,15 750,75 Q 750,135 720,135 L 100,135 Q 40,135 10,75 Z" fill="#090f1b" stroke="#475569" stroke-width="2"/>';
-  const bizRows = Math.min(12, Math.ceil(bizSeats / 4));
-  const ecoRows = Math.min(32, Math.ceil(ecoSeats / 6));
-  for (let i = 0; i < bizRows; i++) html += `<rect x="${70+i*22}" y="30" width="15" height="18" rx="3" fill="#d97706"/>`;
-  const startX = 80 + bizRows * 22;
-  for (let i = 0; i < ecoRows; i++) html += `<rect x="${startX+i*15}" y="27" width="10" height="13" rx="2" fill="#2563eb"/>`;
-  svg.innerHTML = html;
-  if (aircraft && total <= aircraft.seats) {
-    aircraft.bizSeats = bizSeats;
-    aircraft.ecoSeats = ecoSeats;
-    aircraft.seats = total;
-    window.saveGame();
+  if (svg) {
+    let html = '<path d="M 10,75 Q 40,15 100,15 L 720,15 Q 750,15 750,75 Q 750,135 720,135 L 100,135 Q 40,135 10,75 Z" fill="#090f1b" stroke="#475569" stroke-width="2"/>';
+    const bizRows = Math.min(12, Math.ceil(bizSeats / 4));
+    const ecoRows = Math.min(32, Math.ceil(ecoSeats / 6));
+    for (let i = 0; i < bizRows; i++) html += `<rect x="${70+i*22}" y="30" width="15" height="18" rx="3" fill="#d97706"/>`;
+    const startX = 80 + bizRows * 22;
+    for (let i = 0; i < ecoRows; i++) html += `<rect x="${startX+i*15}" y="27" width="10" height="13" rx="2" fill="#2563eb"/>`;
+    svg.innerHTML = html;
   }
+  const status = document.getElementById("cabin-config-status");
+  if (status) {
+    status.textContent = total > capacity ? `超出機型上限 ${capacity} 席，請調低座位數` : `預覽：${total} / ${capacity} 席；按「儲存配置」後才會套用`;
+    status.className = total > capacity ? "text-xs text-rose-400" : "text-xs text-gray-400";
+  }
+};
+
+window.saveCabinConfiguration = function() {
+  const aircraft = getAircraft(window.gameState.selectedReg);
+  const bizSeats = Math.max(0, Math.floor(Number(document.getElementById("input-biz-seats")?.value) || 0));
+  const ecoSeats = Math.max(0, Math.floor(Number(document.getElementById("input-eco-seats")?.value) || 0));
+  const capacity = Number(aircraft?.capacity) || aircraftModels.find(model => model.id === aircraft?.modelId)?.seats || Number(aircraft?.seats) || 0;
+  const total = bizSeats + ecoSeats;
+  const fee = 50000;
+  if (!aircraft) { alert("請先選擇一架飛機。"); return; }
+  if (total < 1 || total > capacity) { alert(`客艙座位數必須介乎 1 至 ${capacity} 席。`); return; }
+  if (window.gameState.company.cash < fee) { alert("公司資金不足，未能支付 $50,000 配置費。"); return; }
+  window.gameState.company.cash -= fee;
+  aircraft.capacity = capacity;
+  aircraft.bizSeats = bizSeats;
+  aircraft.ecoSeats = ecoSeats;
+  aircraft.seats = total;
+  const info = document.getElementById("selected-model-info");
+  if (info) info.textContent = `${aircraft.modelName} | ${total} 席（機型上限 ${capacity} 席）`;
+  window.renderFleetList();
+  window.renderDashboard();
+  window.saveGame();
+  const status = document.getElementById("cabin-config-status");
+  if (status) status.textContent = `配置已儲存，支出 ${money(fee)}`;
+  alert(`客艙配置已更新，支出 ${money(fee)}。`);
 };
 
 window.renderGanttScheduler = function() {
@@ -263,7 +294,7 @@ window.leaseNewAircraft = function(modelId) {
   if (window.gameState.company.cash < model.lease) { alert("公司資金不足，未能支付首週租金。"); return; }
   const reg = "AS-" + String(Date.now()).slice(-4);
   window.gameState.company.cash -= model.lease;
-  window.gameState.fleet.push({ reg, modelId: model.id, modelName: model.name, seats: model.seats, bizSeats: 12, ecoSeats: model.seats - 12, condition: model.isUsed ? model.condition : 100, hourlyCost: 3200, range: model.range });
+  window.gameState.fleet.push({ reg, modelId: model.id, modelName: model.name, capacity: model.seats, seats: model.seats, bizSeats: Math.min(12, model.seats), ecoSeats: Math.max(0, model.seats - 12), condition: model.isUsed ? model.condition : 100, hourlyCost: 3200, range: model.range });
   window.gameState.schedules[reg] = [];
   window.closeModal("modal-lease");
   window.renderFleetList();
