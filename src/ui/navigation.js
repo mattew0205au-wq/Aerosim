@@ -1,7 +1,7 @@
 import { aircraftModels } from '../data/aircrafts.js';
 import { checkScheduleConflict } from '../engine/scheduler.js';
 
-// 全域數據狀態
+// 全域狀態初始化
 window.gameState = {
   selectedReg: 'B-16701',
   fleet: [
@@ -19,8 +19,24 @@ window.gameState = {
   }
 };
 
-// 全域 View 切換引擎
+// 支援平板觸控點擊選單
+window.toggleDropdown = function(event, element) {
+  event.stopPropagation();
+  const isAlreadyActive = element.classList.contains('active');
+  document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
+  if (!isAlreadyActive) {
+    element.classList.add('active');
+  }
+};
+
+// 點擊空白處自動關閉選單
+document.addEventListener('click', () => {
+  document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
+});
+
+// View 畫面切換
 window.switchView = function(viewId) {
+  document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.spa-view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById(`view-${viewId}`);
   if (target) target.classList.remove('hidden');
@@ -30,8 +46,8 @@ window.switchView = function(viewId) {
   if (viewId === 'routes') window.renderRoutesTable();
 };
 
-// 全域 Modal 操控
 window.openModal = function(id) {
+  document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
   const modal = document.getElementById(id);
   if (modal) modal.classList.remove('hidden');
   if (id === 'modal-lease') window.renderMarketList();
@@ -42,7 +58,6 @@ window.closeModal = function(id) {
   if (modal) modal.classList.add('hidden');
 };
 
-// 渲染機隊與選擇飛機
 window.renderFleetList = function() {
   const container = document.getElementById('fleet-list-container');
   if (!container) return;
@@ -66,7 +81,6 @@ window.selectAircraft = function(reg) {
   window.renderFleetList();
 };
 
-// SVG 動態客艙藍圖
 window.updateCabinSVG = function() {
   const bizSeats = parseInt(document.getElementById('input-biz-seats').value || 12);
   const ecoSeats = parseInt(document.getElementById('input-eco-seats').value || 150);
@@ -84,7 +98,6 @@ window.updateCabinSVG = function() {
   svg.innerHTML = html;
 };
 
-// 168h 甘特圖動態渲染與衝突檢測
 window.renderGanttScheduler = function() {
   const container = document.getElementById('gantt-tracks-container');
   if (!container) return;
@@ -146,7 +159,6 @@ window.deleteScheduleSlot = function(reg, idx) {
   window.renderGanttScheduler();
 };
 
-// 細分市場與維護
 window.renderMarketList = function() {
   const container = document.getElementById('aircraft-market-list');
   if (!container) return;
@@ -213,10 +225,9 @@ window.addNewRoute = function() {
   window.renderRoutesTable();
 };
 
-// 初始化圖表與時鐘
 document.addEventListener('DOMContentLoaded', () => {
   lucide.createIcons();
-  
+
   setInterval(() => {
     const clock = document.getElementById('real-utc-clock');
     if (clock) clock.innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
