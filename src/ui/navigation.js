@@ -47,13 +47,9 @@ window.gameState = loadState();
 window.saveGame = function() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(window.gameState));
-    const status = document.getElementById("as-save-status");
-    if (status) status.textContent = "已儲存";
     return true;
   } catch (error) {
     console.error("AeroSim save failed.", error);
-    const status = document.getElementById("as-save-status");
-    if (status) status.textContent = "儲存失敗";
     return false;
   }
 };
@@ -84,6 +80,7 @@ window.switchView = function(viewId) {
   if (viewId === "fleet") window.renderFleetList();
   if (viewId === "routes") window.renderRoutesTable();
   if (viewId === "overview") window.renderDashboard();
+  if (viewId === "overview" || viewId === "routes") window.refreshRouteMaps?.();
 };
 
 window.openModal = function(id) {
@@ -117,7 +114,7 @@ window.renderDashboard = function() {
     <div class="as-kpi"><span class="as-kpi-label">已排定航班</span><strong class="as-kpi-value">${flights} 班</strong></div>
     <div class="as-kpi"><span class="as-kpi-label">平均機況</span><strong class="as-kpi-value">${avgCondition.toFixed(1)}%</strong></div>
     <div class="as-kpi"><span class="as-kpi-label">預估平均載客率</span><strong class="as-kpi-value">${avgLoad.toFixed(1)}%</strong></div>
-    <div class="as-kpi"><span class="as-kpi-label"><span class="as-live-dot"></span>本機存檔</span><strong class="as-kpi-value" id="as-save-status">自動儲存</strong></div>`;
+`;
   const count = document.getElementById("kpi-fleet-count");
   if (count) count.textContent = `${state.fleet.length} 架`;
   const cash = document.getElementById("header-cash");
@@ -387,7 +384,6 @@ function initChart() {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) window.lucide.createIcons();
   startClock();
-  initChart();
   if (!window.gameState.schedules) window.gameState.schedules = {};
   window.gameState.fleet.forEach(aircraft => { if (!window.gameState.schedules[aircraft.reg]) window.gameState.schedules[aircraft.reg] = []; });
   window.renderFleetList();
