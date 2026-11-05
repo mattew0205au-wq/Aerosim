@@ -3,159 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AeroSim Empire - Operations Dispatch Console</title>
-  <!-- 核心 CDN -->
+  <title>AeroSim Empire - 航空簽派管理主控台 (Operations Dispatch Console)</title>
+  <!-- 核心 CDN 庫 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* 專業簽派台樣式：高對比、小留白、硬邊框 */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 12px; }
-    #map { height: 380px; width: 100%; z-index: 1; border: 1px solid #27272a; }
+    /* 硬核簽派 console 風格：等寬字體、高數據密度、無多餘發光與圓角 */
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 11px; line-height: 1.4; }
+    #map { height: 420px; width: 100%; z-index: 1; border: 1px solid #27272a; }
     .leaflet-tile-pane { filter: brightness(0.5) invert(1) contrast(2) hue-rotate(180deg) saturate(0.2); }
-    .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; }
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 0px; }
     .custom-scroll::-webkit-scrollbar-track { background: #09090b; }
+    table td, table th { padding: 4px 8px; white-space: nowrap; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-200 min-h-screen flex flex-col custom-scroll selection:bg-blue-900">
+<body class="bg-zinc-950 text-zinc-200 min-h-screen flex flex-col custom-scroll selection:bg-blue-900 selection:text-white">
 
-  <!-- 1. 專業簽派台 Status Header Bar -->
-  <header class="bg-zinc-900 border-b border-zinc-800 px-3 py-1.5 sticky top-0 z-40 flex items-center justify-between text-xs font-mono">
+  <!-- 1. 專業簽派台頂部狀態列 (Header Bar) -->
+  <header class="bg-zinc-900 border-b border-zinc-800 px-3 py-1.5 sticky top-0 z-40 flex items-center justify-between text-xs">
     <div class="flex items-center space-x-3">
-      <div class="bg-blue-900/80 border border-blue-600 text-blue-200 px-2 py-0.5 rounded-sm font-bold tracking-widest text-xs">
-        DISPATCH CONSOLE v1.0.4
+      <div class="bg-blue-900/90 border border-blue-600 text-blue-200 px-2 py-0.5 font-bold tracking-widest text-xs">
+        DISPATCH CONSOLE v1.2.0
       </div>
       <div class="flex items-center space-x-2">
-        <span class="text-zinc-100 font-bold">STAR ASIA AIRWAYS</span>
-        <span class="text-zinc-500">|</span>
-        <span class="text-zinc-400">CALLSIGN: <strong class="text-blue-400">STARASIA</strong></span>
-        <span class="text-zinc-500">|</span>
-        <span class="text-zinc-400">IATA/ICAO: <strong class="text-zinc-200">SAA / TWN</strong></span>
+        <span class="text-zinc-100 font-bold">星空亞洲航空 (STAR ASIA AIRWAYS)</span>
+        <span class="text-zinc-600">|</span>
+        <span class="text-zinc-400">無線電呼號: <strong class="text-blue-400">STARASIA</strong></span>
+        <span class="text-zinc-600">|</span>
+        <span class="text-zinc-400">代碼: <strong class="text-zinc-200">SAA / TWN</strong></span>
       </div>
     </div>
     
-    <!-- 簽派數據資訊列 -->
+    <!-- 頂部資產與即時運航資訊 -->
     <div class="flex items-center space-x-4">
       <div class="text-right">
-        <span class="text-zinc-500 text-[10px] block leading-none">CASH BALANCE</span>
-        <span class="text-emerald-400 font-bold">$12,480,500 <span class="text-[10px] text-zinc-500">AS$</span></span>
+        <span class="text-zinc-500 text-[10px] block leading-none">現金儲備 (CASH BALANCE)</span>
+        <span class="text-emerald-400 font-bold text-sm">$12,480,500 <span class="text-[10px] text-zinc-500">AS$</span></span>
       </div>
       <div class="border-r border-zinc-800 h-6"></div>
       <div class="text-right">
-        <span class="text-zinc-500 text-[10px] block leading-none">HUB METAR (RCTP)</span>
-        <span class="text-zinc-300 text-[10px] font-mono">25008KT 9999 FEW030 24/18 Q1015</span>
+        <span class="text-zinc-500 text-[10px] block leading-none">每週營運預算 (WEEKLY FLOW)</span>
+        <span class="text-emerald-400 font-bold text-sm">+$684,200</span>
       </div>
       <div class="border-r border-zinc-800 h-6"></div>
-      <div class="bg-zinc-950 border border-zinc-800 px-2 py-1 rounded flex items-center space-x-2">
+      <div class="text-right">
+        <span class="text-zinc-500 text-[10px] block leading-none">樞紐即時氣象 (RCTP METAR)</span>
+        <span class="text-zinc-300 text-[10px]">25008KT 9999 FEW030 24/18 Q1015</span>
+      </div>
+      <div class="border-r border-zinc-800 h-6"></div>
+      <!-- 時鐘控制項 -->
+      <div class="bg-zinc-950 border border-zinc-800 px-2.5 py-1 flex items-center space-x-2">
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <div>
-          <span class="text-zinc-500 text-[10px] block leading-none">SIM TIME (UTC)</span>
-          <span class="text-amber-400 font-bold">WK42 WED 14:25</span>
+          <span class="text-zinc-500 text-[10px] block leading-none">模擬時間 (UTC)</span>
+          <span id="sim-clock" class="text-amber-400 font-bold">第 42 週 週三 14:25</span>
         </div>
+        <button onclick="tickTime()" class="bg-blue-900 hover:bg-blue-800 border border-blue-600 text-blue-200 p-1 ml-1" title="推進 1 小時">
+          <i data-lucide="play" class="w-3 h-3"></i>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- 2. 高密度 Tab 功能切換導覽 -->
-  <nav class="bg-zinc-900/90 border-b border-zinc-800 px-3 flex space-x-1 text-xs font-mono sticky top-[41px] z-30">
-    <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active bg-zinc-950 text-blue-400 border-t-2 border-blue-500 px-3 py-2 flex items-center space-x-1.5 border-x border-zinc-800">
-      <i data-lucide="activity" class="w-3.5 h-3.5"></i><span>[F1] 運務主控台</span>
+  <!-- 2. 功能導覽分頁列 (Tab Switcher) -->
+  <nav class="bg-zinc-900/90 border-b border-zinc-800 px-3 flex space-x-1 font-mono text-xs sticky top-[41px] z-30">
+    <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-btn active bg-zinc-950 text-blue-400 border-t-2 border-blue-500 px-3.5 py-2 flex items-center space-x-1.5 border-x border-zinc-800">
+      <i data-lucide="activity" class="w-3.5 h-3.5"></i><span>[F1] 簽派主控台 (DISPATCH)</span>
     </button>
-    <button onclick="switchTab('fleet')" id="tab-btn-fleet" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="plane" class="w-3.5 h-3.5"></i><span>[F2] 機隊與客艙配置</span>
+    <button onclick="switchTab('fleet')" id="tab-btn-fleet" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
+      <i data-lucide="plane" class="w-3.5 h-3.5"></i><span>[F2] 機隊與客艙配置 (FLEET & CABIN)</span>
     </button>
-    <button onclick="switchTab('schedule')" id="tab-btn-schedule" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="calendar" class="w-3.5 h-3.5"></i><span>[F3] 168h 輪班甘特圖</span>
+    <button onclick="switchTab('schedule')" id="tab-btn-schedule" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
+      <i data-lucide="calendar" class="w-3.5 h-3.5"></i><span>[F3] 168h 輪班甘特圖 (168H GANTT)</span>
     </button>
-    <button onclick="switchTab('routes')" id="tab-btn-routes" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="route" class="w-3.5 h-3.5"></i><span>[F4] 航線網路 & ORS 矩陣</span>
+    <button onclick="switchTab('routes')" id="tab-btn-routes" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
+      <i data-lucide="route" class="w-3.5 h-3.5"></i><span>[F4] 航線網絡 & ORS 評分 (ROUTES)</span>
     </button>
-    <button onclick="switchTab('finance')" id="tab-btn-finance" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3 py-2 flex items-center space-x-1.5 border-x border-transparent">
-      <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>[F5] 財務帳款 (P&L)</span>
+    <button onclick="switchTab('finance')" id="tab-btn-finance" class="tab-btn text-zinc-400 hover:text-zinc-200 px-3.5 py-2 flex items-center space-x-1.5 border-x border-transparent">
+      <i data-lucide="file-text" class="w-3.5 h-3.5"></i><span>[F5] 財務綜合帳款 (FINANCE P&L)</span>
     </button>
   </nav>
 
-  <!-- 3. 主工作區 Workspace -->
-  <main class="flex-1 p-3 space-y-3 max-w-[1600px] w-full mx-auto">
+  <!-- 3. 主工作區 (Workspace) -->
+  <main class="flex-1 p-3 space-y-3 max-w-[1700px] w-full mx-auto">
 
-    <!-- ==================== TAB 1: 運務主控台 (Dispatch Dashboard) ==================== -->
+    <!-- ==================== [F1] 簽派主控台 (DISPATCH DASHBOARD) ==================== -->
     <div id="view-dashboard" class="tab-view space-y-3">
       
-      <!-- 高密度 KPI 數據條 -->
-      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 text-xs font-mono">
+      <!-- 高密度 KPI 數據列 -->
+      <div class="grid grid-cols-2 md:grid-cols-8 gap-2 font-mono">
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">ACTIVE FLEET</span>
-          <span class="text-base font-bold text-zinc-100">16 <span class="text-xs font-normal text-zinc-500">A/C</span></span>
+          <span class="text-zinc-500 block text-[10px]">現役機隊規模</span>
+          <span class="text-sm font-bold text-zinc-100">16 <span class="text-[10px] font-normal text-zinc-500">架</span></span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">ACTIVE ROUTES</span>
-          <span class="text-base font-bold text-zinc-100">34 <span class="text-xs font-normal text-zinc-500">PAIRS</span></span>
+          <span class="text-zinc-500 block text-[10px]">營運航線對</span>
+          <span class="text-sm font-bold text-zinc-100">34 <span class="text-[10px] font-normal text-zinc-500">對</span></span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">AVG LOAD FACTOR</span>
-          <span class="text-base font-bold text-emerald-400">86.4%</span>
+          <span class="text-zinc-500 block text-[10px]">全網平均載客率</span>
+          <span class="text-sm font-bold text-emerald-400">86.4%</span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">AVG UTILIZATION</span>
-          <span class="text-base font-bold text-amber-400">118.2 <span class="text-xs font-normal text-zinc-500">hrs/wk</span></span>
+          <span class="text-zinc-500 block text-[10px]">機隊週利用率</span>
+          <span class="text-sm font-bold text-amber-400">118.2 <span class="text-[10px] font-normal text-zinc-500">小時</span></span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">WEEKLY NET PROFIT</span>
-          <span class="text-base font-bold text-emerald-400">+$684,200</span>
+          <span class="text-zinc-500 block text-[10px]">每週淨營運利潤</span>
+          <span class="text-sm font-bold text-emerald-400">+$684,200</span>
         </div>
         <div class="bg-zinc-900 border border-zinc-800 p-2">
-          <span class="text-zinc-500 block text-[10px]">CREDIT RATING</span>
-          <span class="text-base font-bold text-blue-400">AA- <span class="text-xs font-normal text-zinc-500">#14</span></span>
+          <span class="text-zinc-500 block text-[10px]">企業信用評級</span>
+          <span class="text-sm font-bold text-blue-400">AA- <span class="text-[10px] font-normal text-zinc-500">#14</span></span>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 p-2">
+          <span class="text-zinc-500 block text-[10px]">準點率 (OTP)</span>
+          <span class="text-sm font-bold text-emerald-400">94.1%</span>
+        </div>
+        <div class="bg-zinc-900 border border-zinc-800 p-2">
+          <span class="text-zinc-500 block text-[10px]">燃油儲備庫存</span>
+          <span class="text-sm font-bold text-zinc-200">14,200 <span class="text-[10px] font-normal text-zinc-500">噸</span></span>
         </div>
       </div>
 
-      <!-- 地圖與調度面板 Grid -->
+      <!-- 航網地圖與簽派指令面板 Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
         <!-- 航線地圖 (佔 3 欄) -->
         <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 p-2 space-y-2">
-          <div class="flex justify-between items-center text-xs font-mono px-1">
-            <span class="text-zinc-400 font-bold flex items-center space-x-1">
+          <div class="flex justify-between items-center px-1 font-mono">
+            <span class="text-zinc-400 font-bold flex items-center space-x-1.5">
               <i data-lucide="globe" class="w-3.5 h-3.5 text-blue-500"></i>
-              <span>GLOBAL ROUTE NETWORK (DISPLAYING ACTIVE SECTORS)</span>
+              <span>全球航網運航監控圖 (GLOBAL ROUTE NETWORK)</span>
             </span>
-            <span class="text-zinc-500">BASE HUBS: <strong class="text-zinc-200">RCTP / VHHH</strong></span>
+            <span class="text-zinc-500">主樞紐基地: <strong class="text-zinc-200">RCTP (台北) / VHHH (香港)</strong></span>
           </div>
           <div id="map"></div>
         </div>
 
-        <!-- 右側：指令區與即時 Flight Log -->
-        <div class="space-y-3 flex flex-col font-mono text-xs">
+        <!-- 右側：簽派指令與 ACARS 即時電報 Log -->
+        <div class="space-y-3 flex flex-col font-mono">
           <div class="bg-zinc-900 border border-zinc-800 p-2.5 space-y-2">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">COMMAND ACTIONS</span>
+            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">簽派快捷指令 (COMMAND PALETTE)</span>
             <button onclick="openModal('modal-route')" class="w-full bg-blue-900/60 hover:bg-blue-800 border border-blue-700 text-blue-200 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> APPLY ROUTE PERMIT</span>
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span>> 申請新航線開航許可</span>
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
             </button>
             <button onclick="openModal('modal-lease')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> LEASE MARKETPLACE</span>
+              <span>> 進入全球飛機租賃市場</span>
               <i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
             </button>
             <button onclick="switchTab('fleet')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
-              <span>> CABIN CONFIGURATION</span>
+              <span>> 調整機隊客艙配置與間距</span>
               <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="switchTab('finance')" class="w-full bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 py-1.5 px-2 text-left flex items-center justify-between">
+              <span>> 查看本週損益明細 (P&L)</span>
+              <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
             </button>
           </div>
 
-          <!-- 實時飛行電報 Log -->
+          <!-- 即時電報通知清單 -->
           <div class="bg-zinc-900 border border-zinc-800 p-2.5 flex-1 flex flex-col justify-between space-y-2">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">ACARS / TELEGRAM LOG</span>
-            <div class="space-y-1.5 text-[11px] font-mono custom-scroll max-h-52 overflow-y-auto pr-1">
+            <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">ACARS / 即時運航電報日誌</span>
+            <div id="log-container" class="space-y-1.5 text-[10px] font-mono custom-scroll max-h-56 overflow-y-auto pr-1">
               <div class="border-l-2 border-emerald-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">14:10 UTC</span> | SAA801 ARRIVED RJAA (NRT) LF 94.2% REV $18,400.
+                <span class="text-zinc-500">14:10 UTC</span> | 航班 SAA801 順利降落 RJAA (成田)，載客率 94.2%，淨收益 $18,400 AS$。
               </div>
               <div class="border-l-2 border-amber-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">13:45 UTC</span> | B-16703 SCHEDULED "A-CHECK" AT RCTP HUB.
+                <span class="text-zinc-500">13:45 UTC</span> | 飛機 B-16703 抵達 A 級定期檢修週期，已自動安排於 RCTP 基地。
               </div>
               <div class="border-l-2 border-blue-500 pl-1.5 py-0.5 text-zinc-300">
-                <span class="text-zinc-500">12:00 UTC</span> | FLEET LEASE DEDUCTION: -$280,000 AS$.
+                <span class="text-zinc-500">12:00 UTC</span> | 扣除每週機隊租賃流水與保管費: -$280,000 AS$。
+              </div>
+              <div class="border-l-2 border-emerald-500 pl-1.5 py-0.5 text-zinc-300">
+                <span class="text-zinc-500">09:30 UTC</span> | 航班 SAA008 (RCTP-KLAX) 已經起飛，頭等艙與商務艙售罄。
+              </div>
+              <div class="border-l-2 border-zinc-600 pl-1.5 py-0.5 text-zinc-400">
+                <span class="text-zinc-500">06:00 UTC</span> | 簽派中心完成當日第 1 波次 12 架次航班出港結算。
               </div>
             </div>
           </div>
@@ -163,225 +191,413 @@
       </div>
     </div>
 
-    <!-- ==================== TAB 2: 機隊與客艙 (Fleet & SVG Blueprint) ==================== -->
-    <div id="view-fleet" class="tab-view hidden space-y-3 font-mono text-xs">
+    <!-- ==================== [F2] 機隊與客艙配置 (FLEET & CABIN) ==================== -->
+    <div id="view-fleet" class="tab-view hidden space-y-3 font-mono">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
         
-        <!-- 機隊密集表格 (佔 1 欄) -->
-        <div class="bg-zinc-900 border border-zinc-800 p-2 space-y-2">
-          <span class="text-zinc-400 font-bold block border-b border-zinc-800 pb-1">FLEET LIST (16 AIRCRAFT)</span>
-          <div class="space-y-1 custom-scroll max-h-[500px] overflow-y-auto pr-1">
-            <div onclick="selectAircraft('B-16701', 'Boeing 737-800', 162, 12, 150)" class="bg-zinc-950 border border-blue-600 p-2 cursor-pointer hover:bg-zinc-800 flex justify-between items-center">
+        <!-- 左側：高密度機隊清單 (佔 1 欄) -->
+        <div class="bg-zinc-900 border border-zinc-800 p-2.5 space-y-2">
+          <div class="flex justify-between items-center border-b border-zinc-800 pb-1">
+            <span class="text-zinc-300 font-bold">現役機隊名冊 (16 架)</span>
+            <button onclick="openModal('modal-lease')" class="text-[10px] text-blue-400 hover:underline">+ 引進新機</button>
+          </div>
+          <div class="space-y-1.5 custom-scroll max-h-[540px] overflow-y-auto pr-1">
+            
+            <div onclick="selectAircraft('B-16701', 'Boeing 737-800', 162, 12, 150, 95)" class="fleet-row bg-zinc-950 border border-blue-600 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
               <div>
                 <span class="text-blue-400 font-bold">B-16701</span> <span class="text-zinc-500 text-[10px]">B738</span>
-                <span class="block text-[10px] text-zinc-400">RCTP - RJAA - RCTP</span>
+                <span class="block text-[10px] text-zinc-400">RCTP ⇄ RJAA (每日 2 班)</span>
               </div>
               <div class="text-right">
-                <span class="text-emerald-400 font-bold block">COND 95%</span>
-                <span class="text-[10px] text-zinc-500">162 SEATS</span>
+                <span class="text-emerald-400 font-bold block">機況 95%</span>
+                <span class="text-[10px] text-zinc-500">162 席 (12/150)</span>
               </div>
             </div>
-            <div onclick="selectAircraft('B-16702', 'Airbus A350-900', 306, 32, 274)" class="bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800 flex justify-between items-center opacity-80">
+
+            <div onclick="selectAircraft('B-16702', 'Airbus A350-900', 306, 32, 274, 88)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
               <div>
                 <span class="text-zinc-200 font-bold">B-16702</span> <span class="text-zinc-500 text-[10px]">A359</span>
-                <span class="block text-[10px] text-zinc-400">RCTP - KLAX - RCTP</span>
+                <span class="block text-[10px] text-zinc-400">RCTP ⇄ KLAX (跨洋長程)</span>
               </div>
               <div class="text-right">
-                <span class="text-emerald-400 font-bold block">COND 88%</span>
-                <span class="text-[10px] text-zinc-500">306 SEATS</span>
+                <span class="text-emerald-400 font-bold block">機況 88%</span>
+                <span class="text-[10px] text-zinc-500">306 席 (32/274)</span>
               </div>
             </div>
+
+            <div onclick="selectAircraft('B-16703', 'ATR 72-600', 70, 0, 70, 65)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
+              <div>
+                <span class="text-zinc-200 font-bold">B-16703</span> <span class="text-zinc-500 text-[10px]">AT76</span>
+                <span class="block text-[10px] text-zinc-400">RCTP ⇄ RCFG (離島支線)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-amber-400 font-bold block">保養中 (65%)</span>
+                <span class="text-[10px] text-zinc-500">70 席 (0/70)</span>
+              </div>
+            </div>
+
+            <div onclick="selectAircraft('B-16704', 'Airbus A321neo', 198, 16, 182, 99)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
+              <div>
+                <span class="text-zinc-200 font-bold">B-16704</span> <span class="text-zinc-500 text-[10px]">A21N</span>
+                <span class="block text-[10px] text-zinc-400">RCTP ⇄ WSSS (新加坡)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-emerald-400 font-bold block">機況 99%</span>
+                <span class="text-[10px] text-zinc-500">198 席 (16/182)</span>
+              </div>
+            </div>
+
+            <div onclick="selectAircraft('B-16705', 'Boeing 787-9', 290, 26, 264, 91)" class="fleet-row bg-zinc-950 border border-zinc-800 p-2 cursor-pointer hover:bg-zinc-800/80 flex justify-between items-center">
+              <div>
+                <span class="text-zinc-200 font-bold">B-16705</span> <span class="text-zinc-500 text-[10px]">B789</span>
+                <span class="block text-[10px] text-zinc-400">VHHH ⇄ EGLL (倫敦)</span>
+              </div>
+              <div class="text-right">
+                <span class="text-emerald-400 font-bold block">機況 91%</span>
+                <span class="text-[10px] text-zinc-500">290 席 (26/264)</span>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- 專業 SVG 機艙設計藍圖 (佔 3 欄) -->
+        <!-- 右側：客艙結構藍圖與幾何圖紙 (佔 3 欄) -->
         <div class="lg:col-span-3 bg-zinc-900 border border-zinc-800 p-3 space-y-3">
           <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
             <div>
-              <span class="text-zinc-200 font-bold text-sm">CABBAGE LAYOUT & BLUEPRINT: <span id="selected-reg" class="text-blue-400">B-16701</span></span>
-              <span id="selected-model-info" class="block text-[10px] text-zinc-500">BOEING 737-800 | CABIN WIDTH: 3.54M | MAX DENSITY: 189 SEATS</span>
+              <span class="text-zinc-100 font-bold text-sm">客艙配置與幾何結構圖 (CABIN LAYOUT & BLUEPRINT): <span id="selected-reg" class="text-blue-400 font-mono">B-16701</span></span>
+              <span id="selected-model-info" class="block text-[10px] text-zinc-500">BOEING 737-800 | 客艙寬度: 3.54 米 | 最大密裝限制: 189 席</span>
             </div>
-            <button onclick="alert('Configuration Saved.')" class="bg-blue-900 border border-blue-600 text-blue-200 px-3 py-1 font-bold hover:bg-blue-800">
-              APPLY LAYOUT
+            <button onclick="saveCabinConfig()" class="bg-blue-900 border border-blue-600 text-blue-200 px-3 py-1 font-bold hover:bg-blue-800">
+              套用改艙方案 (支出 $50,000 AS$)
             </button>
           </div>
 
-          <!-- 控制面板 -->
-          <div class="grid grid-cols-3 gap-3 bg-zinc-950 p-2.5 border border-zinc-800">
+          <!-- 座位數與間距滑桿控制區 -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-zinc-950 p-3 border border-zinc-800">
             <div>
-              <label class="text-zinc-400 block text-[10px]">BUSINESS CLASS: <strong id="val-biz-seats" class="text-amber-400">12</strong> SEATS</label>
-              <input type="range" id="input-biz-seats" min="0" max="36" step="4" value="12" oninput="updateCabinSVG()" class="w-full accent-amber-500">
-              <span class="text-[9px] text-zinc-600">2-2 LAYOUT (38" PITCH)</span>
+              <label class="text-zinc-300 block text-[10px] mb-1">商務艙席次 (BUSINESS): <strong id="val-biz-seats" class="text-amber-400 font-mono text-sm">12</strong> 席</label>
+              <input type="range" id="input-biz-seats" min="0" max="36" step="4" value="12" oninput="updateCabinSVG()" class="w-full accent-amber-500 cursor-pointer">
+              <span class="text-[9px] text-zinc-500 block mt-1">2-2 配置, 38 吋座位排距 (Pitch)</span>
             </div>
             <div>
-              <label class="text-zinc-400 block text-[10px]">ECONOMY CLASS: <strong id="val-eco-seats" class="text-blue-400">150</strong> SEATS</label>
-              <input type="range" id="input-eco-seats" min="60" max="180" step="6" value="150" oninput="updateCabinSVG()" class="w-full accent-blue-500">
-              <span class="text-[9px] text-zinc-600">3-3 LAYOUT (31" PITCH)</span>
+              <label class="text-zinc-300 block text-[10px] mb-1">經濟艙席次 (ECONOMY): <strong id="val-eco-seats" class="text-blue-400 font-mono text-sm">150</strong> 席</label>
+              <input type="range" id="input-eco-seats" min="60" max="180" step="6" value="150" oninput="updateCabinSVG()" class="w-full accent-blue-500 cursor-pointer">
+              <span class="text-[9px] text-zinc-500 block mt-1">3-3 配置, 31 吋座位排距 (Pitch)</span>
             </div>
-            <div class="border-l border-zinc-800 pl-3">
-              <span class="text-zinc-500 text-[10px] block">ORS COMFORT INDEX</span>
-              <span id="cabin-ors-score" class="text-base font-bold text-emerald-400">88.5</span> <span class="text-zinc-600">/ 100</span>
+            <div class="border-l border-zinc-800 pl-3 flex flex-col justify-between">
+              <span class="text-zinc-500 text-[10px]">ORS 客流舒適度綜合評分</span>
+              <div>
+                <span id="cabin-ors-score" class="text-xl font-bold text-emerald-400 font-mono">88.5</span>
+                <span class="text-zinc-600 text-xs">/ 100 分</span>
+              </div>
+              <span class="text-[9px] text-emerald-400">得益於標準商務艙與寬鬆經濟艙配置</span>
             </div>
           </div>
 
-          <!-- 專業藍圖圖紙 SVG 繪製區 -->
+          <!-- 精密藍圖繪製 SVG 容器 -->
           <div class="bg-zinc-950 border border-zinc-800 p-4 overflow-x-auto flex justify-center custom-scroll">
-            <svg id="cabin-svg" width="700" height="150" viewBox="0 0 700 150" class="max-w-full">
-              <!-- JS 動態生成精密機艙 SVG -->
+            <svg id="cabin-svg" width="760" height="150" viewBox="0 0 760 150" class="max-w-full">
+              <!-- JS 動態生成圖紙 SVG -->
             </svg>
           </div>
+
+          <!-- 客艙圖例與維護數據 -->
+          <div class="flex justify-between items-center text-[10px] text-zinc-500 border-t border-zinc-800 pt-2 font-mono">
+            <div class="flex space-x-4">
+              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>商務艙 (Business Class)</span>
+              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-600 inline-block mr-1"></span>經濟艙 (Economy Class)</span>
+              <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-800 border border-zinc-700 inline-block mr-1"></span>駕駛艙 / 洗手間 (Galley/Lavatory)</span>
+            </div>
+            <span>下次 C 級大修預計: 1,420 飛行小時後</span>
+          </div>
         </div>
 
       </div>
     </div>
 
-    <!-- ==================== TAB 3: 168h 甘特圖排班 (168h Gantt Scheduler) ==================== -->
-    <div id="view-schedule" class="tab-view hidden space-y-3 font-mono text-xs">
+    <!-- ==================== [F3] 168小時甘特圖排班 (168H GANTT SCHEDULER) ==================== -->
+    <div id="view-schedule" class="tab-view hidden space-y-3 font-mono">
       <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
         <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
-          <span class="text-zinc-200 font-bold">168-HOUR FLEET OPERATIONAL GANTT MATRIX</span>
+          <div>
+            <span class="text-zinc-100 font-bold">168 小時每週機隊運航甘特圖矩陣 (168-HOUR FLEET OPERATIONAL GANTT)</span>
+            <span class="block text-[10px] text-zinc-500">週一 00:00 至 週日 24:00 不間斷排班，過站時間（Turnaround）最低限制 45 分鐘</span>
+          </div>
           <div class="flex items-center space-x-3 text-[10px] text-zinc-400">
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-700 inline-block mr-1"></span>IN-FLIGHT</span>
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>TURNAROUND (45M)</span>
-            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-800 inline-block mr-1"></span>GROUND IDLE</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-blue-800 border border-blue-500 inline-block mr-1"></span>巡航飛行 (Flight Sector)</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-amber-600 inline-block mr-1"></span>過站整備 (Turnaround)</span>
+            <span class="flex items-center"><span class="w-2.5 h-2.5 bg-zinc-950 border border-zinc-800 inline-block mr-1"></span>地面閒置 (Idle)</span>
           </div>
         </div>
 
-        <!-- 精密 168 小時時間軸甘特圖 -->
+        <!-- 168 小時時間軸甘特圖容器 -->
         <div class="overflow-x-auto custom-scroll border border-zinc-800 bg-zinc-950 p-2">
-          <div class="min-w-[1000px] space-y-2">
-            <!-- 7 天刻度標頭 -->
+          <div class="min-w-[1100px] space-y-2">
+            
+            <!-- 7 天 24 小時刻度 -->
             <div class="grid grid-cols-7 gap-px text-center text-[10px] text-zinc-500 bg-zinc-900 border-b border-zinc-800 py-1">
-              <div>MON (00-24h)</div><div>TUE (24-48h)</div><div>WED (48-72h)</div>
-              <div>THU (72-96h)</div><div>FRI (96-120h)</div><div>SAT (120-144h)</div><div>SUN (144-168h)</div>
+              <div>週一 (MON 00-24h)</div><div>週二 (TUE 24-48h)</div><div>週三 (WED 48-72h)</div>
+              <div>週四 (THU 72-96h)</div><div>週五 (FRI 96-120h)</div><div>週六 (SAT 120-144h)</div><div>週日 (SUN 144-168h)</div>
             </div>
 
-            <!-- 軌道 1 -->
+            <!-- 飛機軌道 1 -->
             <div class="space-y-1">
-              <div class="flex justify-between text-[11px] text-zinc-300">
-                <span>AC#01: B-16701 (B738) - BASE: RCTP</span>
-                <span class="text-blue-400">UTILIZATION: 132 HRS / 78.5%</span>
+              <div class="flex justify-between text-[10px] text-zinc-300">
+                <span>軌道 #01: B-16701 (Boeing 737-800) - 台北(RCTP) 基地</span>
+                <span class="text-blue-400">週利用率: 132 小時 (78.5%)</span>
               </div>
               <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 18%;">SAA801 (RCTP-RJAA)</div>
-                <div class="h-full bg-amber-600 w-1.5" title="TURNAROUND"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 18%;">SAA802 (RJAA-RCTP)</div>
-                <div class="h-full bg-zinc-950 w-6"></div>
-                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 18%;">SAA803 (RCTP-RJAA)</div>
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA801 (RCTP-RJAA)</div>
+                <div class="h-full bg-amber-600 w-1.5" title="過站 45m"></div>
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA802 (RJAA-RCTP)</div>
+                <div class="h-full bg-zinc-950 w-4"></div>
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA803 (RCTP-RJAA)</div>
+                <div class="h-full bg-amber-600 w-1.5"></div>
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 14%;">SAA804 (RJAA-RCTP)</div>
               </div>
             </div>
 
-            <!-- 軌道 2 -->
+            <!-- 飛機軌道 2 -->
             <div class="space-y-1">
-              <div class="flex justify-between text-[11px] text-zinc-300">
-                <span>AC#02: B-16702 (A359) - LONG HAUL</span>
-                <span class="text-blue-400">UTILIZATION: 148 HRS / 88.0%</span>
+              <div class="flex justify-between text-[10px] text-zinc-300">
+                <span>軌道 #02: B-16702 (Airbus A350-900) - 跨洋長程線</span>
+                <span class="text-blue-400">週利用率: 148 小時 (88.0%)</span>
               </div>
               <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
-                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 44%;">SAA008 (RCTP-KLAX)</div>
+                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 42%;">SAA008 (RCTP-KLAX 長程)</div>
                 <div class="h-full bg-amber-600 w-2"></div>
-                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 44%;">SAA009 (KLAX-RCTP)</div>
+                <div class="h-full bg-indigo-800 border border-indigo-600 flex items-center justify-center text-zinc-100" style="width: 42%;">SAA009 (KLAX-RCTP 長程)</div>
               </div>
+            </div>
+
+            <!-- 飛機軌道 3 -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-[10px] text-zinc-300">
+                <span>軌道 #03: B-16704 (Airbus A321neo) - 東南亞區域線</span>
+                <span class="text-blue-400">週利用率: 120 小時 (71.4%)</span>
+              </div>
+              <div class="h-6 bg-zinc-900 border border-zinc-800 relative flex items-center p-0.5 space-x-0.5 text-[9px]">
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 22%;">SAA211 (RCTP-WSSS)</div>
+                <div class="h-full bg-amber-600 w-2"></div>
+                <div class="h-full bg-blue-800 border border-blue-600 flex items-center justify-center text-zinc-100" style="width: 22%;">SAA212 (WSSS-RCTP)</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== [F4] 航線網絡 & ORS 矩陣 (ROUTES & ORS) ==================== -->
+    <div id="view-routes" class="tab-view hidden space-y-3 font-mono">
+      <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
+        <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+          <div>
+            <span class="text-zinc-100 font-bold">航線營運分析與 ORS 市場競爭力矩陣 (SECTOR ANALYSIS & ORS MATRIX)</span>
+            <span class="block text-[10px] text-zinc-500">ORS 評分整合票價差額、座椅間距、班次頻率與直飛懲罰權重</span>
+          </div>
+          <button onclick="openModal('modal-route')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">
+            + 開闢新航線
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border border-zinc-800 text-xs">
+            <thead>
+              <tr class="bg-zinc-950 text-zinc-500 border-b border-zinc-800">
+                <th class="border-r border-zinc-800">航線 Sector</th>
+                <th class="border-r border-zinc-800">大圓距離</th>
+                <th class="border-r border-zinc-800">執飛機型</th>
+                <th class="border-r border-zinc-800">每週班次</th>
+                <th class="border-r border-zinc-800">玩家票價 / 市場基準</th>
+                <th class="border-r border-zinc-800">ORS 競爭力得分</th>
+                <th class="border-r border-zinc-800">載客率 (LF)</th>
+                <th>估算每週利潤</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-zinc-800 bg-zinc-950">
+              <tr class="hover:bg-zinc-900">
+                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ RJAA (東京)</td>
+                <td class="border-r border-zinc-800 text-zinc-400">2,182 km</td>
+                <td class="border-r border-zinc-800 text-blue-400">B737-800</td>
+                <td class="border-r border-zinc-800">14 班/週</td>
+                <td class="border-r border-zinc-800 text-zinc-300">$280 / <span class="text-zinc-600">$310</span></td>
+                <td class="border-r border-zinc-800 text-emerald-400 font-bold">84 / 100</td>
+                <td class="border-r border-zinc-800 text-emerald-400">92.4%</td>
+                <td class="text-emerald-400 font-bold">+$142,000 AS$</td>
+              </tr>
+              <tr class="hover:bg-zinc-900">
+                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ KLAX (洛杉磯)</td>
+                <td class="border-r border-zinc-800 text-zinc-400">10,925 km</td>
+                <td class="border-r border-zinc-800 text-amber-400">A350-900</td>
+                <td class="border-r border-zinc-800">7 班/週</td>
+                <td class="border-r border-zinc-800 text-zinc-300">$950 / <span class="text-zinc-600">$920</span></td>
+                <td class="border-r border-zinc-800 text-amber-400 font-bold">68 / 100</td>
+                <td class="border-r border-zinc-800 text-amber-400">78.1%</td>
+                <td class="text-emerald-400 font-bold">+$385,000 AS$</td>
+              </tr>
+              <tr class="hover:bg-zinc-900">
+                <td class="border-r border-zinc-800 font-bold text-zinc-200">VHHH (香港) ✈ EGLL (倫敦)</td>
+                <td class="border-r border-zinc-800 text-zinc-400">9,594 km</td>
+                <td class="border-r border-zinc-800 text-amber-400">B787-9</td>
+                <td class="border-r border-zinc-800">7 班/週</td>
+                <td class="border-r border-zinc-800 text-zinc-300">$880 / <span class="text-zinc-600">$900</span></td>
+                <td class="border-r border-zinc-800 text-emerald-400 font-bold">79 / 100</td>
+                <td class="border-r border-zinc-800 text-emerald-400">88.6%</td>
+                <td class="text-emerald-400 font-bold">+$210,000 AS$</td>
+              </tr>
+              <tr class="hover:bg-zinc-900">
+                <td class="border-r border-zinc-800 font-bold text-zinc-200">RCTP (台北) ✈ WSSS (新加坡)</td>
+                <td class="border-r border-zinc-800 text-zinc-400">3,218 km</td>
+                <td class="border-r border-zinc-800 text-blue-400">A321neo</td>
+                <td class="border-r border-zinc-800">7 班/週</td>
+                <td class="border-r border-zinc-800 text-zinc-300">$340 / <span class="text-zinc-600">$350</span></td>
+                <td class="border-r border-zinc-800 text-emerald-400 font-bold">81 / 100</td>
+                <td class="border-r border-zinc-800 text-emerald-400">85.0%</td>
+                <td class="text-emerald-400 font-bold">+$98,000 AS$</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== [F5] 財務綜合帳款 (FINANCE P&L) ==================== -->
+    <div id="view-finance" class="tab-view hidden space-y-3 font-mono">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        
+        <!-- 損益細項表 (佔 2 欄) -->
+        <div class="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-3 space-y-3">
+          <span class="text-zinc-100 font-bold block border-b border-zinc-800 pb-1">上週綜合損益分類結算表 (WEEKLY P&L LEDGER)</span>
+          
+          <div class="space-y-2 text-xs">
+            <!-- 收入組 -->
+            <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+              <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營運收入項目 (OPERATING REVENUES)</span>
+              <div class="flex justify-between"><span class="text-zinc-500">客運機票收入 (Passenger Ticket Revenue)</span><span class="text-emerald-400">+$1,450,000 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">腹艙貨運收入 (Belly Cargo Revenue)</span><span class="text-emerald-400">+$210,000 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">輔助餐飲與選位收入 (Ancillary Revenue)</span><span class="text-emerald-400">+$45,000 AS$</span></div>
+              <div class="flex justify-between font-bold border-t border-zinc-800 pt-1"><span>總營業收入 (Total Revenue)</span><span class="text-emerald-400">+$1,705,000 AS$</span></div>
+            </div>
+
+            <!-- 支出組 -->
+            <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
+              <span class="text-zinc-400 font-bold block border-b border-zinc-800/80 pb-0.5">營運支出項目 (OPERATING EXPENSES)</span>
+              <div class="flex justify-between"><span class="text-zinc-500">Jet-A1 航空燃油耗費 (Aviation Fuel)</span><span class="text-rose-400">-$420,000 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">機隊每週租賃固定費 (Aircraft Leases)</span><span class="text-rose-400">-$280,000 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">機場起降 Slot 與地勤代理費 (Airport/Handling)</span><span class="text-rose-400">-$185,000 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">飛行員與空服員薪資 (Crew Salaries)</span><span class="text-rose-400">-$90,800 AS$</span></div>
+              <div class="flex justify-between"><span class="text-zinc-500">定期保養與定檢預提費 (Maintenance Reserve)</span><span class="text-rose-400">-$45,000 AS$</span></div>
+              <div class="flex justify-between font-bold border-t border-zinc-800 pt-1"><span>總營業支出 (Total Expenses)</span><span class="text-rose-400">-$1,020,800 AS$</span></div>
+            </div>
+
+            <div class="bg-zinc-800 border border-zinc-700 p-2.5 flex justify-between items-center text-sm font-bold">
+              <span>本週淨營業利潤 (NET OPERATING PROFIT)</span>
+              <span class="text-emerald-400 text-base font-mono">+$684,200 AS$</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- ==================== TAB 4: 航線與 ORS 矩陣 ==================== -->
-    <div id="view-routes" class="tab-view hidden space-y-3 font-mono text-xs">
-      <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
-        <span class="text-zinc-200 font-bold block border-b border-zinc-800 pb-1">SECTOR ANALYSIS & ORS COMPETITIVENESS MATRIX</span>
-        <table class="w-full text-left border-collapse border border-zinc-800">
-          <thead>
-            <tr class="bg-zinc-950 text-zinc-500 border-b border-zinc-800">
-              <th class="p-2 border-r border-zinc-800">SECTOR</th>
-              <th class="p-2 border-r border-zinc-800">DIST (KM)</th>
-              <th class="p-2 border-r border-zinc-800">A/C TYPE</th>
-              <th class="p-2 border-r border-zinc-800">FREQ/WK</th>
-              <th class="p-2 border-r border-zinc-800">FARE (PLAYER / BASE)</th>
-              <th class="p-2 border-r border-zinc-800">ORS SCORE</th>
-              <th class="p-2">EST. WEEKLY PROFIT</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-zinc-800 bg-zinc-950">
-            <tr>
-              <td class="p-2 border-r border-zinc-800 font-bold text-zinc-200">RCTP ✈ RJAA</td>
-              <td class="p-2 border-r border-zinc-800">2,182</td>
-              <td class="p-2 border-r border-zinc-800 text-blue-400">B737-800</td>
-              <td class="p-2 border-r border-zinc-800">14</td>
-              <td class="p-2 border-r border-zinc-800">$280 / <span class="text-zinc-600">$310</span></td>
-              <td class="p-2 border-r border-zinc-800 text-emerald-400 font-bold">84 / 100</td>
-              <td class="p-2 text-emerald-400">+$142,000</td>
-            </tr>
-            <tr>
-              <td class="p-2 border-r border-zinc-800 font-bold text-zinc-200">RCTP ✈ KLAX</td>
-              <td class="p-2 border-r border-zinc-800">10,925</td>
-              <td class="p-2 border-r border-zinc-800 text-amber-400">A350-900</td>
-              <td class="p-2 border-r border-zinc-800">7</td>
-              <td class="p-2 border-r border-zinc-800">$950 / <span class="text-zinc-600">$920</span></td>
-              <td class="p-2 border-r border-zinc-800 text-amber-400 font-bold">68 / 100</td>
-              <td class="p-2 text-emerald-400">+$385,000</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ==================== TAB 5: 財務損益 (Financial Ledger) ==================== -->
-    <div id="view-finance" class="tab-view hidden space-y-3 font-mono text-xs">
-      <div class="bg-zinc-900 border border-zinc-800 p-3 space-y-2">
-        <span class="text-zinc-200 font-bold block border-b border-zinc-800 pb-1">FINANCIAL LEDGER (WEEKLY STATEMENT)</span>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800">REVENUE</span>
-            <div class="flex justify-between"><span class="text-zinc-500">PAX TICKET SALES</span><span class="text-emerald-400">+$1,450,000</span></div>
-            <div class="flex justify-between"><span class="text-zinc-500">BELLY CARGO</span><span class="text-emerald-400">+$210,000</span></div>
+        <!-- 右側：成本佔比圖表 -->
+        <div class="bg-zinc-900 border border-zinc-800 p-3 flex flex-col justify-between">
+          <span class="text-zinc-300 font-bold block border-b border-zinc-800 pb-1">營運成本結構分析 (COST STRUCTURE)</span>
+          <div class="flex-1 flex items-center justify-center p-2">
+            <canvas id="financeChart" class="max-h-60"></canvas>
           </div>
-          <div class="bg-zinc-950 border border-zinc-800 p-2 space-y-1">
-            <span class="text-zinc-400 font-bold block border-b border-zinc-800">EXPENSES</span>
-            <div class="flex justify-between"><span class="text-zinc-500">JET-A1 FUEL</span><span class="text-rose-400">-$420,000</span></div>
-            <div class="flex justify-between"><span class="text-zinc-500">FLEET LEASE</span><span class="text-rose-400">-$280,000</span></div>
-          </div>
+          <span class="text-[9px] text-zinc-600 text-center block font-mono">自動結算週期: 每週日 UTC 00:00 (MIDNIGHT TICK)</span>
         </div>
+
       </div>
     </div>
 
   </main>
 
-  <!-- 全局 MODAL 彈窗 1: 航線申請 (z-[99999] 壓過地圖) -->
-  <div id="modal-route" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono text-xs">
-    <div class="bg-zinc-900 border border-zinc-700 max-w-md w-full p-4 space-y-3 shadow-2xl relative">
+  <!-- 全局 MODAL 彈窗 1: 航線申請 (z-[99999] 徹底壓過地圖) -->
+  <div id="modal-route" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-zinc-900 border border-zinc-700 max-w-md w-full p-4 space-y-3 shadow-2xl relative text-xs">
       <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
-        <span class="font-bold text-zinc-100">> APPLY FOR NEW SECTOR PERMIT</span>
+        <span class="font-bold text-zinc-100">> 申請航線開航許可權 (SECTOR PERMIT)</span>
         <button onclick="closeModal('modal-route')" class="text-zinc-500 hover:text-white">[X]</button>
       </div>
       <div class="space-y-2">
         <div>
-          <label class="text-zinc-400 block text-[10px]">ORIGIN HUB</label>
-          <select class="w-full bg-zinc-950 border border-zinc-800 p-1 text-zinc-200">
-            <option>RCTP - TAIPEI TAOYUAN INT'L</option>
+          <label class="text-zinc-400 block text-[10px]">出發樞紐 (ORIGIN HUB)</label>
+          <select class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+            <option value="RCTP">RCTP - 台北桃園國際機場 (TAIPEI TAOYUAN)</option>
+            <option value="VHHH">VHHH - 香港國際機場 (HONG KONG INT'L)</option>
           </select>
         </div>
         <div>
-          <label class="text-zinc-400 block text-[10px]">DESTINATION</label>
-          <select class="w-full bg-zinc-950 border border-zinc-800 p-1 text-zinc-200">
-            <option>RJAA - TOKYO NARITA INT'L</option>
-            <option>KLAX - LOS ANGELES INT'L</option>
+          <label class="text-zinc-400 block text-[10px]">目的機場 (DESTINATION)</label>
+          <select class="w-full bg-zinc-950 border border-zinc-800 p-1.5 text-zinc-200">
+            <option value="RJAA">RJAA - 東京成田國際機場 (TOKYO NARITA)</option>
+            <option value="KLAX">KLAX - 洛杉磯國際機場 (LOS ANGELES INT'L)</option>
+            <option value="EGLL">EGLL - 倫敦希斯洛機場 (LONDON HEATHROW)</option>
+            <option value="WSSS">WSSS - 新加坡樟宜機場 (SINGAPORE CHANGI)</option>
           </select>
         </div>
+        <div class="bg-zinc-950 p-2 border border-zinc-800 space-y-1 font-mono text-[11px]">
+          <div class="flex justify-between"><span class="text-zinc-500">規費支出:</span><span class="text-amber-400 font-bold">$25,000 AS$</span></div>
+        </div>
       </div>
-      <div class="flex space-x-2 pt-2">
-        <button onclick="closeModal('modal-route')" class="w-1/2 bg-zinc-800 text-zinc-300 py-1.5">CANCEL</button>
-        <button onclick="alert('PERMIT GRANTED. -$25,000 DEDUCTED.'); closeModal('modal-route');" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold">CONFIRM & PAY</button>
+      <div class="flex space-x-2 pt-1">
+        <button onclick="closeModal('modal-route')" class="w-1/2 bg-zinc-800 text-zinc-300 py-1.5">取消</button>
+        <button onclick="alert('航線開航成功！已支付規費 $25,000 AS$。'); closeModal('modal-route');" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">支付並獲得航權</button>
       </div>
     </div>
   </div>
 
-  <!-- JS 引擎 -->
+  <!-- 全局 MODAL 彈窗 2: 飛機租賃市場 -->
+  <div id="modal-lease" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-zinc-900 border border-zinc-700 max-w-xl w-full p-4 space-y-3 shadow-2xl relative text-xs max-h-[85vh] overflow-y-auto custom-scroll">
+      <div class="flex justify-between items-center border-b border-zinc-800 pb-2">
+        <span class="font-bold text-zinc-100">> 全球飛機租賃市場 (GLOBAL LEASE MARKETPLACE)</span>
+        <button onclick="closeModal('modal-lease')" class="text-zinc-500 hover:text-white">[X]</button>
+      </div>
+      
+      <div class="space-y-2">
+        <!-- 租賃機型 1 -->
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-zinc-200 block">Boeing 737-800</span>
+            <span class="text-[10px] text-zinc-500">航程 5,436 km | 最大 189 席 | 耗油 2,500 kg/h</span>
+          </div>
+          <button onclick="alert('簽約成功！Boeing 737-800 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
+            租賃 $45,000/週
+          </button>
+        </div>
+
+        <!-- 租賃機型 2 -->
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-zinc-200 block">Airbus A350-900</span>
+            <span class="text-[10px] text-zinc-500">航程 15,000 km | 最大 440 席 | 耗油 5,800 kg/h</span>
+          </div>
+          <button onclick="alert('簽約成功！Airbus A350-900 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
+            租賃 $180,000/週
+          </button>
+        </div>
+
+        <!-- 租賃機型 3 -->
+        <div class="bg-zinc-950 border border-zinc-800 p-2.5 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-zinc-200 block">Airbus A321neo</span>
+            <span class="text-[10px] text-zinc-500">航程 7,400 km | 最大 244 席 | 耗油 2,100 kg/h</span>
+          </div>
+          <button onclick="alert('簽約成功！Airbus A321neo 已加入機隊。'); closeModal('modal-lease');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs hover:bg-blue-800">
+            租賃 $62,000/週
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 核心 JavaScript 引擎 -->
   <script>
     lucide.createIcons();
 
+    // 1. 分頁切換引擎 (Tab Switcher)
     function switchTab(tabId) {
       document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(el => {
@@ -396,47 +612,112 @@
       if (tabId === 'dashboard') setTimeout(() => map.invalidateSize(), 100);
     }
 
-    // 地圖初始化
+    // 2. 免 API Key 暗黑地圖引擎 (Leaflet + OpenStreetMap)
     const map = L.map('map').setView([23.5, 121], 3);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-    L.circleMarker([25.0777, 121.2330], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RCTP (TAIPEI)</b>");
-    L.circleMarker([35.7647, 140.3863], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RJAA (TOKYO)</b>");
-    L.polyline([[25.0777, 121.2330], [35.7647, 140.3863]], { color: '#3b82f6', weight: 1.5, opacity: 0.8 }).addTo(map);
+    // 標記樞紐機場
+    L.circleMarker([25.0777, 121.2330], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RCTP (台北桃園)</b>");
+    L.circleMarker([35.7647, 140.3863], { color: '#3b82f6', fillColor: '#60a5fa', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>RJAA (東京成田)</b>");
+    L.circleMarker([33.9425, -118.4081], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>KLAX (洛杉磯)</b>");
+    L.circleMarker([51.4706, -0.4619], { color: '#f59e0b', fillColor: '#fbbf24', fillOpacity: 0.9, radius: 5 }).addTo(map).bindPopup("<b>EGLL (倫敦希斯洛)</b>");
 
+    // 航線連接弧線
+    L.polyline([[25.0777, 121.2330], [35.7647, 140.3863]], { color: '#3b82f6', weight: 1.5, opacity: 0.8 }).addTo(map);
+    L.polyline([[25.0777, 121.2330], [33.9425, -118.4081]], { color: '#f59e0b', weight: 1.5, opacity: 0.6, dashArray: '4, 4' }).addTo(map);
+
+    // 3. SVG 機艙幾何圖紙動態繪製引擎
     function updateCabinSVG() {
       const bizSeats = parseInt(document.getElementById('input-biz-seats').value);
       const ecoSeats = parseInt(document.getElementById('input-eco-seats').value);
       document.getElementById('val-biz-seats').innerText = bizSeats;
       document.getElementById('val-eco-seats').innerText = ecoSeats;
 
+      // 即時算 ORS 分數
+      const ors = (82.0 + (24 - bizSeats) * 0.4 + (180 - ecoSeats) * 0.08).toFixed(1);
+      document.getElementById('cabin-ors-score').innerText = ors;
+
       const svg = document.getElementById('cabin-svg');
-      let html = `<path d="M 10,75 Q 40,15 100,15 L 660,15 Q 690,15 690,75 Q 690,135 660,135 L 100,135 Q 40,135 10,75 Z" fill="#09090b" stroke="#27272a" stroke-width="2"/>`;
+      let html = `<path d="M 10,75 Q 40,15 100,15 L 720,15 Q 750,15 750,75 Q 750,135 720,135 L 100,135 Q 40,135 10,75 Z" fill="#09090b" stroke="#27272a" stroke-width="2"/>`;
       
+      // 繪製駕駛艙與前廚房
+      html += `<path d="M 20,65 Q 35,25 60,25 L 60,125 Q 35,125 20,85 Z" fill="#18181b"/>`;
+      html += `<text x="28" y="78" fill="#52525b" font-size="8">PILOT</text>`;
+
+      // 繪製商務艙 (amber 矩形)
       const bizRows = Math.ceil(bizSeats / 4);
+      let startX = 75;
       for (let r = 0; r < bizRows; r++) {
-        html += `<rect x="${70 + r*22}" y="28" width="15" height="18" fill="#d97706"/>`;
-        html += `<rect x="${70 + r*22}" y="94" width="15" height="18" fill="#d97706"/>`;
+        html += `<rect x="${startX + r*22}" y="28" width="15" height="18" fill="#d97706"/>`;
+        html += `<rect x="${startX + r*22}" y="52" width="15" height="18" fill="#d97706"/>`;
+        html += `<rect x="${startX + r*22}" y="80" width="15" height="18" fill="#d97706"/>`;
+        html += `<rect x="${startX + r*22}" y="104" width="15" height="18" fill="#d97706"/>`;
       }
-      const ecoRows = Math.min(22, Math.ceil(ecoSeats / 6));
-      const startX = 70 + bizRows * 22 + 15;
+
+      // 隔板 (Divider)
+      startX = startX + bizRows * 22 + 10;
+      html += `<line x1="${startX - 5}" y1="18" x2="${startX - 5}" y2="132" stroke="#3f3f46" stroke-width="1.5" stroke-dasharray="2,2"/>`;
+
+      // 繪製經濟艙 (blue 矩形)
+      const ecoRows = Math.min(26, Math.ceil(ecoSeats / 6));
       for (let r = 0; r < ecoRows; r++) {
         html += `<rect x="${startX + r*15}" y="25" width="10" height="12" fill="#2563eb"/>`;
-        html += `<rect x="${startX + r*15}" y="103" width="10" height="12" fill="#2563eb"/>`;
+        html += `<rect x="${startX + r*15}" y="40" width="10" height="12" fill="#2563eb"/>`;
+        html += `<rect x="${startX + r*15}" y="55" width="10" height="12" fill="#2563eb"/>`;
+        html += `<rect x="${startX + r*15}" y="83" width="10" height="12" fill="#2563eb"/>`;
+        html += `<rect x="${startX + r*15}" y="98" width="10" height="12" fill="#2563eb"/>`;
+        html += `<rect x="${startX + r*15}" y="113" width="10" height="12" fill="#2563eb"/>`;
       }
+
       svg.innerHTML = html;
     }
     updateCabinSVG();
 
-    function selectAircraft(reg, model, totalSeats, biz, eco) {
+    // 4. 切換飛機選擇
+    function selectAircraft(reg, model, totalSeats, biz, eco, cond) {
       document.getElementById('selected-reg').innerText = reg;
+      document.getElementById('selected-model-info').innerText = `${model.toUpperCase()} | 總席次: ${totalSeats} | 當前機況: ${cond}%`;
       document.getElementById('input-biz-seats').value = biz;
       document.getElementById('input-eco-seats').value = eco;
       updateCabinSVG();
     }
 
+    // 5. 推進模擬時間腳本
+    let currentHour = 14;
+    function tickTime() {
+      currentHour = (currentHour + 1) % 24;
+      document.getElementById('sim-clock').innerText = `第 42 週 週三 ${currentHour < 10 ? '0' + currentHour : currentHour}:25`;
+      
+      // 動態加入 Log
+      const container = document.getElementById('log-container');
+      const newLog = document.createElement('div');
+      newLog.className = "border-l-2 border-blue-500 pl-1.5 py-0.5 text-zinc-300";
+      newLog.innerHTML = `<span class="text-zinc-500">${currentHour}:25 UTC</span> | 模擬 Tick 推進 1 小時，營運數據結算完成。`;
+      container.prepend(newLog);
+    }
+
+    // 6. Modal 彈窗操控
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    // 7. Chart.js 財務圖表渲染
+    const ctx = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['航空燃油 (Fuel)', '機隊租金 (Lease)', '起降費 (Landing)', '人員薪資 (Salaries)', '保養費用 (Maint)'],
+        datasets: [{
+          data: [420000, 280000, 185000, 90800, 45000],
+          backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#6b7280'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#a1a1aa', font: { size: 10, family: 'monospace' } } }
+        }
+      }
+    });
   </script>
 </body>
 </html>
