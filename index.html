@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AeroSim MMO - 專業航空帝國線上模擬聯機系統</title>
+  <title>AeroSim Empire - 專業航空營運與簽派主控台</title>
+  <!-- 核心 CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,74 +16,309 @@
   <header class="bg-[#1a202c] border-b border-[#2d3748] sticky top-0 z-50 text-xs">
     <div class="px-4 py-1.5 flex items-center justify-between border-b border-[#2d3748] bg-[#141923]">
       <div class="flex items-center space-x-4">
-        <span class="font-black tracking-widest text-base text-white flex items-center space-x-1 cursor-pointer">
+        <span onclick="window.switchView('overview')" class="font-black tracking-widest text-base text-white flex items-center space-x-1 cursor-pointer">
           <span class="bg-blue-700 text-white px-1.5 py-0.5 text-xs font-mono">AS</span>
-          <span>AIRLINESIM</span>
+          <span>AEROSIM</span>
         </span>
         <span class="text-gray-600">|</span>
-        <span class="text-gray-300 font-bold">星空亞洲航空 (Yeddo Pacific)</span>
-        <span id="header-cash" class="text-rose-400 font-mono font-bold">-166,669 AS$</span>
+        <span class="text-gray-300 font-bold">星空亞洲航空 (Star Asia Airways)</span>
+        <span id="header-cash" class="text-emerald-400 font-mono font-bold">$12,480,500 AS$</span>
       </div>
 
       <div class="flex items-center space-x-4 font-mono text-[11px]">
         <div class="text-gray-300 flex items-center space-x-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>真實時間 (UTC): <strong id="real-utc-clock" class="text-amber-400">--</strong></span>
+          <span>真實 1:1 UTC 時間: <strong id="real-utc-clock" class="text-amber-400">Loading...</strong></span>
         </div>
       </div>
     </div>
 
-    <!-- 2. 四大企業級二級導覽選單 -->
+    <!-- 2. 完整四大企業級下拉選單 (Company, Management, Commercial, Operations) -->
     <nav class="px-4 bg-[#1a202c] flex space-x-1 font-medium text-gray-200">
+      
+      <!-- 公司 (Company) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
         <span class="flex items-center space-x-1"><span>公司</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[200px] py-1 text-xs font-normal">
-          <a href="#" data-view-target="overview" class="block px-3 py-1.5 hover:bg-[#2b3649]">概覽 (Overview)</a>
-          <a href="#" data-view-target="company-settings" class="block px-3 py-1.5 hover:bg-[#2b3649]">系統設定</a>
+        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[220px] py-1 text-xs font-normal z-50">
+          <a href="#" onclick="window.switchView('overview')" class="block px-3 py-1.5 hover:bg-[#2b3649]">總覽儀表板 (Dashboard)</a>
+          <a href="#" onclick="alert('系統常規設定')" class="block px-3 py-1.5 hover:bg-[#2b3649]">設定 (常規)</a>
+          <a href="#" onclick="alert('遊戲偏好設定')" class="block px-3 py-1.5 hover:bg-[#2b3649]">設定 (遊戲)</a>
+          <a href="#" onclick="alert('企業公開資訊')" class="block px-3 py-1.5 hover:bg-[#2b3649]">公共資訊</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <a href="#" onclick="window.switchView('overview')" class="block px-4 py-1 hover:bg-[#2b3649] text-gray-400">└ 企業概覽</a>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-4 py-1 hover:bg-[#2b3649] text-gray-400">└ 航班時刻表</a>
         </div>
       </div>
 
+      <!-- 管理 (Management) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
         <span class="flex items-center space-x-1"><span>管理</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[200px] py-1 text-xs font-normal">
-          <a href="#" data-view-target="procurement" class="block px-3 py-1.5 hover:bg-[#2b3649]">採購與飛機市場</a>
-          <a href="#" data-view-target="hr" class="block px-3 py-1.5 hover:bg-[#2b3649]">人力資源</a>
+        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-50">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">採購管理</span>
+          <a href="#" onclick="window.openModal('modal-lease')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機市場與製造商</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">財務管理</span>
+          <a href="#" onclick="window.switchView('finance')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 企業融資與期貨避險</a>
+          <a href="#" onclick="window.switchView('finance')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 會計與資產負債 (P&L)</a>
         </div>
       </div>
 
+      <!-- 商業 (Commercial) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
         <span class="flex items-center space-x-1"><span>商業</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[200px] py-1 text-xs font-normal">
-          <a href="#" data-view-target="network" class="block px-3 py-1.5 hover:bg-[#2b3649]">航線網絡規劃</a>
-          <a href="#" data-view-target="sales" class="block px-3 py-1.5 hover:bg-[#2b3649]">銷售與票價</a>
+        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-50">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">航線網絡規劃</span>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 航班排程與時刻表</a>
+          <a href="#" onclick="window.switchView('routes')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 航線計劃 & ORS 矩陣</a>
+          <a href="#" onclick="window.openModal('modal-route')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 場站開設與航權</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">銷售與產品</span>
+          <a href="#" onclick="window.switchView('routes')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 價格與機票策略</a>
+          <a href="#" onclick="window.switchView('fleet')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 客艙配置預設</a>
         </div>
       </div>
 
+      <!-- 營運 (Operations) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
         <span class="flex items-center space-x-1"><span>營運</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[200px] py-1 text-xs font-normal">
-          <a href="#" data-view-target="fleet" class="block px-3 py-1.5 hover:bg-[#2b3649]">機隊分派調度</a>
-          <a href="#" data-view-target="occ" class="block px-3 py-1.5 hover:bg-[#2b3649]">即時 OCC 運行控制</a>
+        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[260px] py-1 text-xs font-normal z-50">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">機隊管理</span>
+          <a href="#" onclick="window.switchView('fleet')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機分派與調度</a>
+          <a href="#" onclick="window.openMaintenanceModal()" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機維護與保養 (MRO)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-blue-400 font-bold">168h 動態甘特圖排班</a>
         </div>
       </div>
+
     </nav>
   </header>
 
-  <!-- 3. 主內容容器 -->
-  <main id="main-content" class="flex-1 max-w-[1700px] w-full mx-auto p-3 space-y-3">
-    <div class="as-box p-3"><p class="text-xs text-gray-400">核心模組系統載入中...</p></div>
+  <!-- 3. 主 View 切換容器 -->
+  <main class="flex-1 max-w-[1700px] w-full mx-auto p-3 space-y-3">
+
+    <!-- VIEW 1: 總覽儀表板 -->
+    <div id="view-overview" class="spa-view space-y-3">
+      <div class="grid grid-cols-2 md:grid-cols-6 gap-2 font-mono">
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">現役機隊</span><span class="text-sm font-bold text-gray-100 font-mono" id="kpi-fleet-count">4 架</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">營運航線</span><span class="text-sm font-bold text-gray-100 font-mono">2 條</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">全網平均載客率</span><span class="text-sm font-bold text-emerald-400 font-mono">88.4%</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">週利潤預估</span><span class="text-sm font-bold text-emerald-400 font-mono">+$527,000</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">信用評級</span><span class="text-sm font-bold text-blue-400 font-mono">AA-</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">准點率 (OTP)</span><span class="text-sm font-bold text-emerald-400 font-mono">95.2%</span></div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+        <div class="lg:col-span-8 as-box p-3 space-y-2">
+          <div class="as-header-box">燃油現貨走勢 (Jet-A1 Spot Trends)</div>
+          <div class="h-48 w-full"><canvas id="fuelChart"></canvas></div>
+        </div>
+        <div class="lg:col-span-4 as-box p-3 space-y-2">
+          <div class="as-header-box">快速簽派控制</div>
+          <div class="space-y-1.5 pt-1">
+            <button onclick="window.openModal('modal-route')" class="w-full bg-blue-900/60 hover:bg-blue-800 border border-blue-700 text-blue-200 py-1.5 px-2 text-left flex justify-between items-center">
+              <span>+ 申請航線開航許可</span><i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="window.openModal('modal-lease')" class="w-full bg-[#141923] hover:bg-[#2b3649] border border-[#2d3748] text-gray-300 py-1.5 px-2 text-left flex justify-between items-center">
+              <span>+ 引進飛機 (細分/二手市場)</span><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="window.switchView('schedule')" class="w-full bg-[#141923] hover:bg-[#2b3649] border border-[#2d3748] text-gray-300 py-1.5 px-2 text-left flex justify-between items-center">
+              <span>> 168h 甘特圖動態排班</span><i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: 機隊與 SVG 客艙藍圖 -->
+    <div id="view-fleet" class="spa-view hidden space-y-3 font-mono">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-3">
+        <div class="as-box p-2 space-y-2">
+          <div class="as-header-box flex justify-between items-center">
+            <span>現役機隊名冊</span>
+            <button onclick="window.openModal('modal-lease')" class="text-[10px] text-blue-400 hover:underline">+ 引進</button>
+          </div>
+          <div id="fleet-list-container" class="space-y-1.5 custom-scroll max-h-[540px] overflow-y-auto p-1"></div>
+        </div>
+
+        <div class="lg:col-span-3 as-box p-3 space-y-3">
+          <div class="flex justify-between items-center border-b border-[#2d3748] pb-2">
+            <div>
+              <span class="text-gray-100 font-bold text-sm">客艙結構藍圖: <span id="selected-reg" class="text-blue-400 font-mono">B-16701</span></span>
+              <span id="selected-model-info" class="block text-[10px] text-gray-400">BOEING 737-800 | 席次: 162</span>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="window.openMaintenanceModal()" class="bg-amber-900 border border-amber-600 text-amber-200 px-2.5 py-1 text-xs font-bold hover:bg-amber-800">
+                🛠️ A/B/C 級定檢大修
+              </button>
+              <button onclick="alert('客艙配置已成功更新');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">
+                儲存配置 ($50k)
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 bg-[#141923] p-3 border border-[#2d3748]">
+            <div>
+              <label class="text-gray-300 block text-[10px] mb-1">商務艙 (BUSINESS): <strong id="val-biz-seats" class="text-amber-400 font-mono text-sm">12</strong> 席</label>
+              <input type="range" id="input-biz-seats" min="0" max="36" step="4" value="12" oninput="window.updateCabinSVG()" class="w-full accent-amber-500 cursor-pointer">
+            </div>
+            <div>
+              <label class="text-gray-300 block text-[10px] mb-1">經濟艙 (ECONOMY): <strong id="val-eco-seats" class="text-blue-400 font-mono text-sm">150</strong> 席</label>
+              <input type="range" id="input-eco-seats" min="60" max="180" step="6" value="150" oninput="window.updateCabinSVG()" class="w-full accent-blue-500 cursor-pointer">
+            </div>
+            <div class="border-l border-[#2d3748] pl-3 flex flex-col justify-between">
+              <span class="text-gray-400 text-[10px]">ORS 客流舒適度指標</span>
+              <div><span id="cabin-ors-score" class="text-xl font-bold text-emerald-400 font-mono">88.5</span><span class="text-gray-500 text-xs">/ 100</span></div>
+            </div>
+          </div>
+
+          <div class="bg-[#141923] border border-[#2d3748] p-4 overflow-x-auto flex justify-center custom-scroll">
+            <svg id="cabin-svg" width="760" height="150" viewBox="0 0 760 150" class="max-w-full"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 3: 168h 動態甘特圖排班 -->
+    <div id="view-schedule" class="spa-view hidden space-y-3 font-mono">
+      <div class="as-box p-3 space-y-3">
+        <div class="as-header-box flex justify-between items-center">
+          <div>
+            <span>168 小時動態互動排班甘特圖 (GANTT SCHEDULER)</span>
+            <span class="block text-[10px] font-normal text-gray-400">自動執行 45 分鐘過站整備 (Turnaround Buffer) 與碰撞檢測</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scroll border border-[#2d3748] bg-[#141923] p-2">
+          <div class="min-w-[1200px] space-y-3">
+            <div class="grid grid-cols-7 gap-px text-center text-[10px] text-gray-400 bg-[#1a202c] border-b border-[#2d3748] py-1 font-bold">
+              <div>週一 (00-24h)</div><div>週二 (24-48h)</div><div>週三 (48-72h)</div>
+              <div>週四 (72-96h)</div><div>週五 (96-120h)</div><div>週六 (120-144h)</div><div>週日 (144-168h)</div>
+            </div>
+            <div id="gantt-tracks-container" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 4: 航線網絡 & ORS -->
+    <div id="view-routes" class="spa-view hidden space-y-3 font-mono">
+      <div class="as-box p-3 space-y-2">
+        <div class="as-header-box flex justify-between items-center">
+          <span>航線網絡營運與 ORS 評分矩陣</span>
+          <button onclick="window.openModal('modal-route')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-0.5 text-xs font-bold hover:bg-blue-800">+ 開闢新航線</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse border border-[#2d3748] text-xs">
+            <thead>
+              <tr class="bg-[#141923] text-gray-400 border-b border-[#2d3748]">
+                <th class="border-r border-[#2d3748]">航線 Sector</th>
+                <th class="border-r border-[#2d3748]">距離 (km)</th>
+                <th class="border-r border-[#2d3748]">預估時間</th>
+                <th class="border-r border-[#2d3748]">票價 (玩家 / 基準)</th>
+                <th class="border-r border-[#2d3748]">ORS 評分</th>
+                <th>估算週利潤</th>
+              </tr>
+            </thead>
+            <tbody id="routes-table-body" class="divide-y divide-gray-800 bg-[#141923]"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 5: 財務與期貨避險 -->
+    <div id="view-finance" class="spa-view hidden space-y-3 font-mono">
+      <div class="as-box p-3 space-y-2">
+        <div class="as-header-box">⛽ JET-A1 燃油現貨市場與期貨避險合約</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748]">
+            <span class="text-gray-400 block text-[10px]">即時現貨價格 (SPOT)</span>
+            <span class="text-lg font-bold text-amber-400">$820 / 噸</span>
+          </div>
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
+            <span class="text-gray-400 block text-[10px]">4 週短線避險</span>
+            <span class="text-sm font-bold text-gray-200">$840 / 噸</span>
+            <button onclick="alert('已成功鎖定 4 週期貨合約')" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] hover:bg-blue-800">鎖定 4 週 ($50k)</button>
+          </div>
+          <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
+            <span class="text-gray-400 block text-[10px]">12 週長線避險</span>
+            <span class="text-sm font-bold text-gray-200">$860 / 噸</span>
+            <button onclick="alert('已成功鎖定 12 週期貨合約')" class="w-full bg-blue-900 border border-blue-600 text-blue-200 py-1 text-[10px] hover:bg-blue-800">鎖定 12 週 ($120k)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
-  <script type="module">
-    import { aircraftModels } from './src/data/aircrafts.js';
-    import { checkScheduleConflict } from './src/engine/scheduler.js';
+  <!-- MODALS 全局彈窗 -->
+  <div id="modal-route" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-[#1a202c] border border-[#2d3748] max-w-md w-full p-4 space-y-3 text-xs">
+      <div class="flex justify-between border-b border-[#2d3748] pb-2">
+        <span class="font-bold text-gray-100">> 申請航線開航許可權</span>
+        <button onclick="window.closeModal('modal-route')" class="text-gray-400 hover:text-white">[X]</button>
+      </div>
+      <div class="space-y-2">
+        <div><label class="text-gray-400 block text-[10px]">出發樞紐</label><select id="select-origin" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RCTP">RCTP - 台北桃園國際機場</option></select></div>
+        <div><label class="text-gray-400 block text-[10px]">目的機場</label><select id="select-dest" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RJAA">RJAA - 東京成田國際機場</option><option value="KLAX">KLAX - 洛杉磯國際機場</option></select></div>
+      </div>
+      <div class="flex space-x-2 pt-1">
+        <button onclick="window.closeModal('modal-route')" class="w-1/2 bg-gray-800 text-gray-300 py-1.5">取消</button>
+        <button onclick="window.addNewRoute()" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">支付 $25,000 開航</button>
+      </div>
+    </div>
+  </div>
 
-    lucide.createIcons();
+  <div id="modal-lease" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-[#1a202c] border border-[#2d3748] max-w-3xl w-full p-4 space-y-3 text-xs max-h-[85vh] overflow-y-auto custom-scroll">
+      <div class="flex justify-between border-b border-[#2d3748] pb-2">
+        <span class="font-bold text-gray-100">> 全球細分機型與二手飛機市場</span>
+        <button onclick="window.closeModal('modal-lease')" class="text-gray-400 hover:text-white">[X]</button>
+      </div>
+      <div id="aircraft-market-list" class="space-y-2"></div>
+    </div>
+  </div>
 
-    // 秒級 1:1 UTC 時鐘
-    setInterval(() => {
-      document.getElementById('real-utc-clock').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-    }, 1000);
-  </script>
+  <div id="modal-add-flight" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-[#1a202c] border border-[#2d3748] max-w-md w-full p-4 space-y-3 text-xs">
+      <div class="flex justify-between border-b border-[#2d3748] pb-2">
+        <span class="font-bold text-gray-100">> 排入新航班: <span id="add-flight-reg" class="text-blue-400"></span></span>
+        <button onclick="window.closeModal('modal-add-flight')" class="text-gray-400 hover:text-white">[X]</button>
+      </div>
+      <div class="space-y-2">
+        <div><label class="text-gray-400 block text-[10px]">選擇航線</label><select id="add-flight-route-select" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"></select></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="text-gray-400 block text-[10px]">起飛星期</label><select id="add-flight-day" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="0">週一</option><option value="1">週二</option><option value="2">週三</option><option value="3">週四</option><option value="4">週五</option><option value="5">週六</option><option value="6">週日</option></select></div>
+          <div><label class="text-gray-400 block text-[10px]">起飛小時 (0-23 UTC)</label><input type="number" id="add-flight-hour" min="0" max="23" value="8" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"></div>
+        </div>
+      </div>
+      <div class="flex space-x-2 pt-1">
+        <button onclick="window.closeModal('modal-add-flight')" class="w-1/2 bg-gray-800 text-gray-300 py-1.5">取消</button>
+        <button onclick="window.confirmScheduleFlight()" class="w-1/2 bg-blue-900 border border-blue-600 text-blue-200 py-1.5 font-bold hover:bg-blue-800">排入甘特圖</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-maintenance" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[99999] hidden flex items-center justify-center p-4 font-mono">
+    <div class="bg-[#1a202c] border border-[#2d3748] max-w-md w-full p-4 space-y-3 text-xs">
+      <div class="flex justify-between border-b border-[#2d3748] pb-2">
+        <span class="font-bold text-gray-100">> A/B/C 級定檢大修廠</span>
+        <button onclick="window.closeModal('modal-maintenance')" class="text-gray-400 hover:text-white">[X]</button>
+      </div>
+      <div class="space-y-2">
+        <p class="text-gray-400">當前選擇: <strong id="maint-reg" class="text-blue-400">B-16701</strong></p>
+        <div class="bg-[#141923] p-2 border border-[#2d3748] flex justify-between items-center">
+          <div><span class="font-bold text-gray-200 block">A-Check 輕度維護</span><span class="text-[10px] text-gray-500">機況 +10%</span></div>
+          <button onclick="window.performMaintenance(10, 15000)" class="bg-blue-900 border border-blue-600 text-blue-200 px-2 py-1 text-[10px]">支出 $15,000</button>
+        </div>
+        <div class="bg-[#141923] p-2 border border-[#2d3748] flex justify-between items-center">
+          <div><span class="font-bold text-amber-400 block">C-Check 重度大修</span><span class="text-[10px] text-gray-500">恢復至 100% 機況</span></div>
+          <button onclick="window.performMaintenance(100, 150000)" class="bg-amber-900 border border-amber-600 text-amber-200 px-2 py-1 text-[10px]">支出 $150,000</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主邏輯載入 -->
+  <script type="module" src="src/ui/navigation.js"></script>
 </body>
 </html>
