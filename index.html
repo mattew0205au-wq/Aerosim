@@ -9,6 +9,12 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="css/airlinesim.css">
+  <style>
+    /* 強化下拉選單觸控與懸停穩定度 */
+    .dropdown-menu { display: none; }
+    .dropdown:hover .dropdown-menu,
+    .dropdown.active .dropdown-menu { display: block; }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col custom-scroll selection:bg-blue-900 selection:text-white">
 
@@ -33,60 +39,90 @@
       </div>
     </div>
 
-    <!-- 2. 完整四大企業級下拉選單 (Company, Management, Commercial, Operations) -->
+    <!-- 2. 完全對齊 AirlineSim 架構的四大詳細下拉選單 -->
     <nav class="px-4 bg-[#1a202c] flex space-x-1 font-medium text-gray-200">
       
-      <!-- 公司 (Company) -->
-      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
+      <!-- 1. 公司選單 (Company Dropdown) -->
+      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>公司</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[220px] py-1 text-xs font-normal z-50">
-          <a href="#" onclick="window.switchView('overview')" class="block px-3 py-1.5 hover:bg-[#2b3649]">總覽儀表板 (Dashboard)</a>
-          <a href="#" onclick="alert('系統常規設定')" class="block px-3 py-1.5 hover:bg-[#2b3649]">設定 (常規)</a>
-          <a href="#" onclick="alert('遊戲偏好設定')" class="block px-3 py-1.5 hover:bg-[#2b3649]">設定 (遊戲)</a>
-          <a href="#" onclick="alert('企業公開資訊')" class="block px-3 py-1.5 hover:bg-[#2b3649]">公共資訊</a>
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-[999]">
+          <a href="#" onclick="window.switchView('overview')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">概覽 (Overview / Dashboard)</a>
+          <a href="#" onclick="alert('常規設定')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">設定 (常規) (Settings - General)</a>
+          <a href="#" onclick="alert('遊戲設定')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">設定 (遊戲) (Settings - Game)</a>
+          <a href="#" onclick="alert('公共資訊')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">公共資訊 (Public Information)</a>
+          <a href="#" onclick="alert('公司設立與清算')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">公司設立與清算 (Company Setup and Liquidation)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
-          <a href="#" onclick="window.switchView('overview')" class="block px-4 py-1 hover:bg-[#2b3649] text-gray-400">└ 企業概覽</a>
-          <a href="#" onclick="window.switchView('schedule')" class="block px-4 py-1 hover:bg-[#2b3649] text-gray-400">└ 航班時刻表</a>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">企業頁面 (Enterprise Page)</span>
+          <a href="#" onclick="window.switchView('overview')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 資訊概覽 (Overview)</a>
+          <a href="#" onclick="alert('合同夥伴')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 合同夥伴 (Contractual Partners)</a>
+          <a href="#" onclick="alert('事實與數據')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 事實與數據 (Facts and Figures)</a>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 航班時刻表 (Flight Schedule)</a>
         </div>
       </div>
 
-      <!-- 管理 (Management) -->
-      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
+      <!-- 2. 管理選單 (Management Dropdown) -->
+      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>管理</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-50">
-          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">採購管理</span>
-          <a href="#" onclick="window.openModal('modal-lease')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機市場與製造商</a>
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[250px] py-1 text-xs font-normal z-[999]">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">採購管理 (Procurement)</span>
+          <a href="#" onclick="window.openModal('modal-lease')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機製造商 (Aircraft Manufacturers)</a>
+          <a href="#" onclick="window.openModal('modal-lease')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機市場 (Aircraft Market)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
-          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">財務管理</span>
-          <a href="#" onclick="window.switchView('finance')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 企業融資與期貨避險</a>
-          <a href="#" onclick="window.switchView('finance')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 會計與資產負債 (P&L)</a>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">人力資源 (Human Resources)</span>
+          <a href="#" onclick="alert('人員管理')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 人員管理 (Personnel Management)</a>
+          <a href="#" onclick="alert('機組人員管理')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 機組人員管理 (Crew Management)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">投資與證券 (Investments)</span>
+          <a href="#" onclick="alert('市場與交易所')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 市場與交易所 (Markets & Exchanges)</a>
+          <a href="#" onclick="alert('子公司與投資組合')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 子公司與投資組合 (Portfolio)</a>
+          <a href="#" onclick="alert('訂單列表')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 訂單列表 (Order List)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">財務管理 (Finance)</span>
+          <a href="#" onclick="window.switchView('finance')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 企業融資 (Corporate Finance)</a>
+          <a href="#" onclick="window.switchView('finance')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 會計與資產負債 (Accounting)</a>
+          <a href="#" onclick="window.switchView('finance')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 現金流 (Cash Flow)</a>
+          <a href="#" onclick="window.switchView('finance')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 資產管理 (Asset Management)</a>
+          <a href="#" onclick="window.switchView('finance')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 租賃管理 (Leasing)</a>
         </div>
       </div>
 
-      <!-- 商業 (Commercial) -->
-      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
+      <!-- 3. 商業選單 (Commercial Dropdown) -->
+      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>商業</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-50">
-          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">航線網絡規劃</span>
-          <a href="#" onclick="window.switchView('schedule')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 航班排程與時刻表</a>
-          <a href="#" onclick="window.switchView('routes')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 航線計劃 & ORS 矩陣</a>
-          <a href="#" onclick="window.openModal('modal-route')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 場站開設與航權</a>
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[260px] py-1 text-xs font-normal z-[999]">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">航線網路規劃 (Network Planning)</span>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 航班排程與時刻表 (Flight Scheduling)</a>
+          <a href="#" onclick="window.switchView('routes')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 航線計劃 (Route Planning)</a>
+          <a href="#" onclick="window.openModal('modal-route')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 場站開設 (Stations)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
-          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">銷售與產品</span>
-          <a href="#" onclick="window.switchView('routes')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 價格與機票策略</a>
-          <a href="#" onclick="window.switchView('fleet')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 客艙配置預設</a>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">銷售與分銷 (Sales & Distribution)</span>
+          <a href="#" onclick="window.switchView('routes')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 價格與票價策略 (Pricing / Fares)</a>
+          <a href="#" onclick="alert('預訂系統')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 預訂系統管理 (Booking Management)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">產品與客戶服務 (Product & Customer Service)</span>
+          <a href="#" onclick="alert('服務設定檔')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 服務設定檔 (Service Profiles)</a>
+          <a href="#" onclick="window.switchView('fleet')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 機艙配置預設 (Cabin Configurations)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">業務拓展與合作 (Business Development)</span>
+          <a href="#" onclick="alert('聯運協議')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 聯運協議 (Interlining)</a>
+          <a href="#" onclick="alert('代碼共享')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 聯營與代碼共享 (Codeshare Agreements)</a>
         </div>
       </div>
 
-      <!-- 營運 (Operations) -->
-      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer">
+      <!-- 4. 營運選單 (Operations Dropdown) -->
+      <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>營運</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full hidden bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[260px] py-1 text-xs font-normal z-50">
-          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">機隊管理</span>
-          <a href="#" onclick="window.switchView('fleet')" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機分派與調度</a>
-          <a href="#" onclick="window.openMaintenanceModal()" class="block px-4 py-1 hover:bg-[#2b3649]">└ 飛機維護與保養 (MRO)</a>
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[280px] py-1 text-xs font-normal z-[999]">
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">機隊管理 (Fleet Management)</span>
+          <a href="#" onclick="window.switchView('fleet')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機分派與調度 (Scheduling & Allocation)</a>
+          <a href="#" onclick="window.openMaintenanceModal()" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機維護與保養 (Maintenance / MRO)</a>
           <div class="border-t border-[#2d3748] my-1"></div>
-          <a href="#" onclick="window.switchView('schedule')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-blue-400 font-bold">168h 動態甘特圖排班</a>
+          <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">地面營運與場站 (Ground Ops & Stations)</span>
+          <a href="#" onclick="alert('地勤合同')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 地勤服務合同 (Ground Handling Services)</a>
+          <a href="#" onclick="alert('時刻槽位')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 機場時刻/槽位管理 (Slot Management)</a>
+          <div class="border-t border-[#2d3748] my-1"></div>
+          <a href="#" onclick="alert('性能測試')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">性能評估與測試工具 (Performance Check Tool)</a>
+          <a href="#" onclick="window.switchView('schedule')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-blue-400 font-bold">即時監控與運行控制 (OCC / Flight Tracking)</a>
         </div>
       </div>
 
@@ -96,34 +132,71 @@
   <!-- 3. 主 View 切換容器 -->
   <main class="flex-1 max-w-[1700px] w-full mx-auto p-3 space-y-3">
 
-    <!-- VIEW 1: 總覽儀表板 -->
+    <!-- VIEW 1: 總覽儀表板 (已移除右側快速控制，恢復三欄門戶排版) -->
     <div id="view-overview" class="spa-view space-y-3">
+      
+      <!-- KPI 數據快速欄 -->
       <div class="grid grid-cols-2 md:grid-cols-6 gap-2 font-mono">
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">現役機隊</span><span class="text-sm font-bold text-gray-100 font-mono" id="kpi-fleet-count">4 架</span></div>
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">營運航線</span><span class="text-sm font-bold text-gray-100 font-mono">2 條</span></div>
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">全網平均載客率</span><span class="text-sm font-bold text-emerald-400 font-mono">88.4%</span></div>
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">週利潤預估</span><span class="text-sm font-bold text-emerald-400 font-mono">+$527,000</span></div>
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">信用評級</span><span class="text-sm font-bold text-blue-400 font-mono">AA-</span></div>
-        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">准點率 (OTP)</span><span class="text-sm font-bold text-emerald-400 font-mono">95.2%</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">現役機隊</span><span class="text-sm font-bold text-gray-100" id="kpi-fleet-count">4 架</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">營運航線</span><span class="text-sm font-bold text-gray-100">2 條</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">全網平均載客率</span><span class="text-sm font-bold text-emerald-400">88.4%</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">週利潤預估</span><span class="text-sm font-bold text-emerald-400">+$527,000</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">信用評級</span><span class="text-sm font-bold text-blue-400">AA-</span></div>
+        <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">准點率 (OTP)</span><span class="text-sm font-bold text-emerald-400">95.2%</span></div>
       </div>
 
+      <!-- 三欄門戶核心區 -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        <div class="lg:col-span-8 as-box p-3 space-y-2">
-          <div class="as-header-box">燃油現貨走勢 (Jet-A1 Spot Trends)</div>
-          <div class="h-48 w-full"><canvas id="fuelChart"></canvas></div>
+        <!-- 左欄：全網即時新聞 (4 欄) -->
+        <div class="lg:col-span-4 space-y-3">
+          <div class="as-box">
+            <div class="as-header-box flex justify-between items-center">
+              <span>新聞 (News Feed)</span>
+              <span class="text-[10px] text-gray-400">即時同步</span>
+            </div>
+            <div class="p-2 space-y-1.5 text-[11px] font-mono custom-scroll max-h-[480px] overflow-y-auto">
+              <div class="border-b border-gray-800 pb-1.5">
+                <span class="text-gray-500 block text-[10px]">2026-11-05 02:22 UTC</span>
+                <p><strong class="text-blue-400">KoreaXPRS</strong> 已於 <span class="text-gray-200">Nagoya (名古屋)</span> 開設新航站。</p>
+              </div>
+              <div class="border-b border-gray-800 pb-1.5">
+                <span class="text-gray-500 block text-[10px]">2026-11-05 02:22 UTC</span>
+                <p><strong class="text-blue-400">KoreaXPRS</strong> 已於 <span class="text-gray-200">Chengdu (成都)</span> 開設新航站。</p>
+              </div>
+              <div class="border-b border-gray-800 pb-1.5">
+                <span class="text-gray-500 block text-[10px]">2026-11-05 02:21 UTC</span>
+                <p><strong class="text-blue-400">Northern Bear Air</strong> 已於 <span class="text-gray-200">Almaty (阿拉木圖)</span> 開設新航站。</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="lg:col-span-4 as-box p-3 space-y-2">
-          <div class="as-header-box">快速簽派控制</div>
-          <div class="space-y-1.5 pt-1">
-            <button onclick="window.openModal('modal-route')" class="w-full bg-blue-900/60 hover:bg-blue-800 border border-blue-700 text-blue-200 py-1.5 px-2 text-left flex justify-between items-center">
-              <span>+ 申請航線開航許可</span><i data-lucide="plus" class="w-3.5 h-3.5"></i>
-            </button>
-            <button onclick="window.openModal('modal-lease')" class="w-full bg-[#141923] hover:bg-[#2b3649] border border-[#2d3748] text-gray-300 py-1.5 px-2 text-left flex justify-between items-center">
-              <span>+ 引進飛機 (細分/二手市場)</span><i data-lucide="shopping-cart" class="w-3.5 h-3.5"></i>
-            </button>
-            <button onclick="window.switchView('schedule')" class="w-full bg-[#141923] hover:bg-[#2b3649] border border-[#2d3748] text-gray-300 py-1.5 px-2 text-left flex justify-between items-center">
-              <span>> 168h 甘特圖動態排班</span><i data-lucide="calendar" class="w-3.5 h-3.5"></i>
-            </button>
+
+        <!-- 中欄：利率與燃油現貨走勢 (5 欄) -->
+        <div class="lg:col-span-5 space-y-3">
+          <div class="as-box">
+            <div class="as-header-box">利率 (Interest Rates)</div>
+            <div class="p-2 space-y-1 font-mono text-xs">
+              <div class="flex justify-between py-0.5 border-b border-gray-800"><span class="text-gray-400">優惠利率 (Prime Rate)</span><span class="text-gray-200">6.13%</span></div>
+              <div class="flex justify-between py-0.5 border-b border-gray-800"><span class="text-gray-400">擔保貸款 (Secured Loan)</span><span class="text-gray-200">16.00%</span></div>
+              <div class="flex justify-between py-0.5 border-b border-gray-800"><span class="text-gray-400">救援貸款 (Bailout)</span><span class="text-gray-200">172.00%</span></div>
+            </div>
+          </div>
+
+          <div class="as-box">
+            <div class="as-header-box">燃油現貨走勢 (Jet-A1 Spot Trends)</div>
+            <div class="p-2 space-y-2">
+              <div class="h-44 w-full"><canvas id="fuelChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄：線上使用者與公告 (3 欄) -->
+        <div class="lg:col-span-3 space-y-3">
+          <div class="as-box">
+            <div class="as-header-box flex justify-between"><span>目前線上的使用者</span><span class="text-emerald-400 font-mono">(12)</span></div>
+            <div class="p-2 text-xs leading-relaxed font-mono text-gray-300 break-words">
+              411694617, Albert_Einstein, context7, Copernicus, FreeStyle, Galileo, HenriSainio, Kopernik, MasterLee98
+            </div>
           </div>
         </div>
       </div>
@@ -147,12 +220,8 @@
               <span id="selected-model-info" class="block text-[10px] text-gray-400">BOEING 737-800 | 席次: 162</span>
             </div>
             <div class="flex space-x-2">
-              <button onclick="window.openMaintenanceModal()" class="bg-amber-900 border border-amber-600 text-amber-200 px-2.5 py-1 text-xs font-bold hover:bg-amber-800">
-                🛠️ A/B/C 級定檢大修
-              </button>
-              <button onclick="alert('客艙配置已成功更新');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">
-                儲存配置 ($50k)
-              </button>
+              <button onclick="window.openMaintenanceModal()" class="bg-amber-900 border border-amber-600 text-amber-200 px-2.5 py-1 text-xs font-bold hover:bg-amber-800">🛠️ A/B/C 級定檢大修</button>
+              <button onclick="alert('客艙配置已成功更新');" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-1 text-xs font-bold hover:bg-blue-800">儲存配置 ($50k)</button>
             </div>
           </div>
 
