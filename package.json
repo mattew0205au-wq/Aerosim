@@ -1,0 +1,9 @@
+{
+  "name": "aerosim",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/ui/navigation.js && node --check src/engine/flight.js && node --check src/engine/ors.js && node --check src/engine/scheduler.js && node --check src/services/apiService.js && node --check src/data/aircrafts.js"
+  }
+}
