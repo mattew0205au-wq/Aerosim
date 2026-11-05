@@ -113,3 +113,10 @@ main input[type="range"] { min-height: 0; }
   #as-ops-panel { grid-template-columns: 1fr 1fr; }
   .as-kpi-value { font-size: 17px; }
 }
+
+/* Real interactive route maps */
+.aerosim-map { width: 100%; height: 360px; min-height: 280px; background: #0b1424; z-index: 1; }
+#overview-route-map { height: 280px; }
+.leaflet-container { font: 12px/1.5 Inter, system-ui, sans-serif; background: #0b1424; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #111b2e; color: #e5edf8; }
+.leaflet-control-attribution { font-size: 10px !important; }
