@@ -16,6 +16,30 @@ function createMap(elementId, zoom) {
   return { map, layer };
 }
 
+function greatCircleSegments(start, end, steps = 64) {
+  const toVector = ([lat, lon]) => {
+    const phi = lat * Math.PI / 180, lambda = lon * Math.PI / 180;
+    return [Math.cos(phi) * Math.cos(lambda), Math.cos(phi) * Math.sin(lambda), Math.sin(phi)];
+  };
+  const a = toVector(start), b = toVector(end);
+  const dot = Math.max(-1, Math.min(1, a[0]*b[0] + a[1]*b[1] + a[2]*b[2]));
+  const omega = Math.acos(dot), sinOmega = Math.sin(omega);
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const wa = sinOmega < 1e-8 ? 1 - t : Math.sin((1 - t) * omega) / sinOmega;
+    const wb = sinOmega < 1e-8 ? t : Math.sin(t * omega) / sinOmega;
+    const x = wa*a[0] + wb*b[0], y = wa*a[1] + wb*b[1], z = wa*a[2] + wb*b[2];
+    points.push([Math.atan2(z, Math.hypot(x, y)) * 180 / Math.PI, Math.atan2(y, x) * 180 / Math.PI]);
+  }
+  const segments = [[]];
+  points.forEach((point, index) => {
+    if (index && Math.abs(point[1] - points[index - 1][1]) > 180) segments.push([]);
+    segments[segments.length - 1].push(point);
+  });
+  return segments.filter(segment => segment.length > 1);
+}
+
 function renderRoutes() {
   if (!window.gameState) return;
   for (const { map, layer } of maps.values()) {
@@ -27,10 +51,12 @@ function renderRoutes() {
       if (!origin || !destination) return;
       const color = palette[index % palette.length];
       const start = [origin.lat, origin.lon], end = [destination.lat, destination.lon];
-      window.L.polyline([start, end], {
-        color, weight: 3, opacity: 0.9, dashArray: "7 6",
-        lineCap: "round"
-      }).bindPopup(`${route.origin} → ${route.dest}<br>${Number(route.dist || 0).toLocaleString()} km`).addTo(layer);
+      greatCircleSegments(start, end).forEach(segment => {
+        window.L.polyline(segment, {
+          color, weight: 3, opacity: 0.9, dashArray: "7 6",
+          lineCap: "round"
+        }).bindPopup(`${route.origin} → ${route.dest}<br>${Number(route.dist || 0).toLocaleString()} km`).addTo(layer);
+      });
       bounds.push(start, end);
       for (const [code, airport, point] of [[route.origin, origin, start], [route.dest, destination, end]]) {
         if (usedAirports.has(code)) continue;
