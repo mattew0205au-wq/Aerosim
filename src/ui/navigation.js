@@ -1,7 +1,6 @@
 import { aircraftModels } from '../data/aircrafts.js';
 import { checkScheduleConflict } from '../engine/scheduler.js';
 
-// 全域狀態初始化
 window.gameState = {
   selectedReg: 'B-16701',
   fleet: [
@@ -19,7 +18,6 @@ window.gameState = {
   }
 };
 
-// 支援平板觸控點擊選單
 window.toggleDropdown = function(event, element) {
   event.stopPropagation();
   const isAlreadyActive = element.classList.contains('active');
@@ -29,17 +27,18 @@ window.toggleDropdown = function(event, element) {
   }
 };
 
-// 點擊空白處自動關閉選單
 document.addEventListener('click', () => {
   document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
 });
 
-// View 畫面切換
+// View 畫面切換引擎
 window.switchView = function(viewId) {
   document.querySelectorAll('.dropdown').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.spa-view').forEach(el => el.classList.add('hidden'));
   const target = document.getElementById(`view-${viewId}`);
-  if (target) target.classList.remove('hidden');
+  if (target) {
+    target.classList.remove('hidden');
+  }
 
   if (viewId === 'schedule') window.renderGanttScheduler();
   if (viewId === 'fleet') window.renderFleetList();
