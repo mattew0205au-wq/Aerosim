@@ -142,6 +142,26 @@
         <div class="as-box p-2"><span class="text-gray-500 block text-[10px]">准點率 (OTP)</span><span class="text-sm font-bold text-emerald-400">95.2%</span></div>
       </div>
 
+      <section class="as-box p-3 space-y-2 mb-3">
+        <div class="flex flex-wrap justify-between items-center gap-2">
+          <div><div class="as-header-box !bg-transparent !border-0 !p-0">航線網絡 · NETWORK OVERVIEW</div><p class="text-[10px] text-gray-400 mt-1">模擬航線示意圖 · 非即時航班追蹤</p></div>
+          <button type="button" onclick="window.switchView('routes')" class="bg-blue-900 border border-blue-600 text-blue-100 px-3 py-1.5 text-xs">管理航線 →</button>
+        </div>
+        <div class="rounded-lg overflow-hidden border border-slate-700/70 bg-[#0b1424]">
+          <svg viewBox="0 0 900 250" role="img" aria-label="亞洲及跨太平洋航線網絡示意圖" class="w-full h-auto">
+            <defs><pattern id="as-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#334155" stroke-opacity=".28" stroke-width="1"/></pattern></defs>
+            <rect width="900" height="250" fill="url(#as-grid)"/>
+            <path d="M115 78 Q240 15 390 74 T710 75" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-dasharray="5 7"/>
+            <path d="M430 136 Q510 95 595 125 T790 110" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-dasharray="5 7"/>
+            <path d="M250 125 Q340 65 435 105" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+            <path d="M250 125 Q500 15 765 165" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 5"/>
+            <g fill="#38bdf8" stroke="#e0f2fe" stroke-width="2"><circle cx="250" cy="125" r="6"/><circle cx="435" cy="105" r="5"/></g>
+            <g fill="#a78bfa" stroke="#ede9fe" stroke-width="2"><circle cx="765" cy="165" r="5"/></g>
+            <g fill="#e2e8f0" font-size="13" font-family="system-ui"><text x="264" y="119">台北桃園 RCTP</text><text x="447" y="98">東京成田 RJAA</text><text x="680" y="188">洛杉磯 KLAX</text></g>
+            <text x="18" y="225" fill="#64748b" font-size="10" font-family="system-ui">AEROSIM · ROUTE SCHEMATIC</text>
+          </svg>
+        </div>
+      </section>
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div class="lg:col-span-4 space-y-3">
           <div class="as-box">
@@ -546,8 +566,8 @@
         <button onclick="window.closeModal('modal-route')" class="text-gray-400 hover:text-white">[X]</button>
       </div>
       <div class="space-y-2">
-        <div><label class="text-gray-400 block text-[10px]">出發樞紐</label><select id="select-origin" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RCTP">RCTP - 台北桃園國際機場</option></select></div>
-        <div><label class="text-gray-400 block text-[10px]">目的機場</label><select id="select-dest" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RJAA">RJAA - 東京成田國際機場</option><option value="KLAX">KLAX - 洛杉磯國際機場</option></select></div>
+        <div><label class="text-gray-400 block text-[10px]">出發樞紐</label><select id="select-origin" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RCTP">RCTP - 台北桃園</option><option value="RJAA">RJAA - 東京成田</option><option value="RJTT">RJTT - 東京羽田</option><option value="VHHH">VHHH - 香港國際</option><option value="RKSI">RKSI - 首爾仁川</option><option value="WSSS">WSSS - 新加坡樟宜</option><option value="KUL">KUL - 吉隆坡</option><option value="KLAX">KLAX - 洛杉磯</option><option value="KSFO">KSFO - 三藩市</option><option value="EGLL">EGLL - 倫敦希斯路</option><option value="EDDF">EDDF - 法蘭克福</option><option value="YSSY">YSSY - 悉尼</option></select></div>
+        <div><label class="text-gray-400 block text-[10px]">目的機場</label><select id="select-dest" class="w-full bg-[#141923] border border-[#2d3748] p-1.5 text-gray-200"><option value="RJAA">RJAA - 東京成田</option><option value="RJTT">RJTT - 東京羽田</option><option value="VHHH">VHHH - 香港國際</option><option value="RKSI">RKSI - 首爾仁川</option><option value="WSSS">WSSS - 新加坡樟宜</option><option value="KUL">KUL - 吉隆坡</option><option value="KLAX">KLAX - 洛杉磯</option><option value="KSFO">KSFO - 三藩市</option><option value="EGLL">EGLL - 倫敦希斯路</option><option value="EDDF">EDDF - 法蘭克福</option><option value="YSSY">YSSY - 悉尼</option></select></div>
       </div>
       <div class="flex space-x-2 pt-1">
         <button onclick="window.closeModal('modal-route')" class="w-1/2 bg-gray-800 text-gray-300 py-1.5">取消</button>
