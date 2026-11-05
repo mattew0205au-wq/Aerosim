@@ -366,21 +366,6 @@ function startClock() {
   window.setInterval(update, 1000);
 }
 
-function initChart() {
-  const canvas = document.getElementById("fuelChart");
-  if (!canvas || !window.Chart) return;
-  try {
-    new window.Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"],
-        datasets: [{ label: "燃油指數（模擬）", data: [82, 79, 85, 81, 88, 84, 86], borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,.12)", fill: true, tension: .35, borderWidth: 2, pointRadius: 2 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: "#94a3b8" } }, y: { grid: { color: "rgba(148,163,184,.12)" }, ticks: { color: "#94a3b8" } } } }
-    });
-  } catch (error) { console.warn("Fuel chart unavailable.", error); }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) window.lucide.createIcons();
   startClock();
