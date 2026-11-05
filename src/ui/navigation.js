@@ -94,6 +94,7 @@ window.switchView = function(viewId) {
   if (viewId === "schedule") window.renderGanttScheduler();
   if (viewId === "fleet") window.renderFleetList();
   if (viewId === "routes") window.renderRoutesTable();
+  if (viewId === "partners") window.renderContracts?.();
   if (viewId === "overview") window.renderDashboard();
   if (viewId === "overview" || viewId === "routes") window.refreshRouteMaps?.();
 };
