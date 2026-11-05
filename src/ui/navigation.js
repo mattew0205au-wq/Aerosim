@@ -47,13 +47,9 @@ window.gameState = loadState();
 window.saveGame = function() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(window.gameState));
-    const status = document.getElementById("as-save-status");
-    if (status) status.textContent = "已儲存";
     return true;
   } catch (error) {
     console.error("AeroSim save failed.", error);
-    const status = document.getElementById("as-save-status");
-    if (status) status.textContent = "儲存失敗";
     return false;
   }
 };
@@ -84,6 +80,7 @@ window.switchView = function(viewId) {
   if (viewId === "fleet") window.renderFleetList();
   if (viewId === "routes") window.renderRoutesTable();
   if (viewId === "overview") window.renderDashboard();
+  if (viewId === "overview" || viewId === "routes") window.refreshRouteMaps?.();
 };
 
 window.openModal = function(id) {
@@ -117,7 +114,7 @@ window.renderDashboard = function() {
     <div class="as-kpi"><span class="as-kpi-label">已排定航班</span><strong class="as-kpi-value">${flights} 班</strong></div>
     <div class="as-kpi"><span class="as-kpi-label">平均機況</span><strong class="as-kpi-value">${avgCondition.toFixed(1)}%</strong></div>
     <div class="as-kpi"><span class="as-kpi-label">預估平均載客率</span><strong class="as-kpi-value">${avgLoad.toFixed(1)}%</strong></div>
-    <div class="as-kpi"><span class="as-kpi-label"><span class="as-live-dot"></span>本機存檔</span><strong class="as-kpi-value" id="as-save-status">自動儲存</strong></div>`;
+`;
   const count = document.getElementById("kpi-fleet-count");
   if (count) count.textContent = `${state.fleet.length} 架`;
   const cash = document.getElementById("header-cash");
@@ -369,25 +366,9 @@ function startClock() {
   window.setInterval(update, 1000);
 }
 
-function initChart() {
-  const canvas = document.getElementById("fuelChart");
-  if (!canvas || !window.Chart) return;
-  try {
-    new window.Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: {
-        labels: ["週一", "週二", "週三", "週四", "週五", "週六", "週日"],
-        datasets: [{ label: "燃油指數（模擬）", data: [82, 79, 85, 81, 88, 84, 86], borderColor: "#38bdf8", backgroundColor: "rgba(56,189,248,.12)", fill: true, tension: .35, borderWidth: 2, pointRadius: 2 }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: "#94a3b8" } }, y: { grid: { color: "rgba(148,163,184,.12)" }, ticks: { color: "#94a3b8" } } } }
-    });
-  } catch (error) { console.warn("Fuel chart unavailable.", error); }
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   if (window.lucide) window.lucide.createIcons();
   startClock();
-  initChart();
   if (!window.gameState.schedules) window.gameState.schedules = {};
   window.gameState.fleet.forEach(aircraft => { if (!window.gameState.schedules[aircraft.reg]) window.gameState.schedules[aircraft.reg] = []; });
   window.renderFleetList();
