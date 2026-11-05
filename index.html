@@ -8,7 +8,9 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="css/airlinesim.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     .dropdown-menu { display: none; }
     .dropdown:hover .dropdown-menu,
@@ -44,7 +46,7 @@
       <!-- 1. 公司選單 (Company Dropdown) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>公司</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-[999]">
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[240px] py-1 text-xs font-normal z-[999]" onclick="event.stopPropagation()">
           <a href="#" onclick="window.switchView('overview')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">概覽 (Overview / Dashboard)</a>
           <a href="#" onclick="window.switchView('settings-general')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">設定 (常規) (Settings - General)</a>
           <a href="#" onclick="window.switchView('settings-game')" class="block px-3 py-1.5 hover:bg-[#2b3649] text-gray-200">設定 (遊戲) (Settings - Game)</a>
@@ -62,7 +64,7 @@
       <!-- 2. 管理選單 (Management Dropdown) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>管理</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[250px] py-1 text-xs font-normal z-[999]">
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[250px] py-1 text-xs font-normal z-[999]" onclick="event.stopPropagation()">
           <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">採購管理 (Procurement)</span>
           <a href="#" onclick="window.switchView('procurement-mfr')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機製造商 (Aircraft Manufacturers)</a>
           <a href="#" onclick="window.openModal('modal-lease')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機市場 (Aircraft Market)</a>
@@ -88,7 +90,7 @@
       <!-- 3. 商業選單 (Commercial Dropdown) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>商業</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[260px] py-1 text-xs font-normal z-[999]">
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[260px] py-1 text-xs font-normal z-[999]" onclick="event.stopPropagation()">
           <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">航線網路規劃 (Network Planning)</span>
           <a href="#" onclick="window.switchView('schedule')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 航班排程與時刻表 (Flight Scheduling)</a>
           <a href="#" onclick="window.switchView('routes')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 航線計劃 (Route Planning)</a>
@@ -111,7 +113,7 @@
       <!-- 4. 營運選單 (Operations Dropdown) -->
       <div class="dropdown relative py-1.5 px-3 hover:bg-[#2d3748] cursor-pointer" onclick="window.toggleDropdown(event, this)">
         <span class="flex items-center space-x-1"><span>營運</span><i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i></span>
-        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[280px] py-1 text-xs font-normal z-[999]">
+        <div class="dropdown-menu absolute left-0 top-full bg-[#1a202c] border border-[#2d3748] shadow-2xl min-w-[280px] py-1 text-xs font-normal z-[999]" onclick="event.stopPropagation()">
           <span class="block px-3 py-1 text-[10px] font-bold text-gray-500 uppercase">機隊管理 (Fleet Management)</span>
           <a href="#" onclick="window.switchView('fleet')" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機分派與調度 (Scheduling & Allocation)</a>
           <a href="#" onclick="window.openMaintenanceModal()" class="block px-5 py-1 hover:bg-[#2b3649] text-gray-300">└ 飛機維護與保養 (Maintenance / MRO)</a>
@@ -147,20 +149,7 @@
           <div><div class="as-header-box !bg-transparent !border-0 !p-0">航線網絡 · NETWORK OVERVIEW</div><p class="text-[10px] text-gray-400 mt-1">模擬航線示意圖 · 非即時航班追蹤</p></div>
           <button type="button" onclick="window.switchView('routes')" class="bg-blue-900 border border-blue-600 text-blue-100 px-3 py-1.5 text-xs">管理航線 →</button>
         </div>
-        <div class="rounded-lg overflow-hidden border border-slate-700/70 bg-[#0b1424]">
-          <svg viewBox="0 0 900 250" role="img" aria-label="亞洲及跨太平洋航線網絡示意圖" class="w-full h-auto">
-            <defs><pattern id="as-grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#334155" stroke-opacity=".28" stroke-width="1"/></pattern></defs>
-            <rect width="900" height="250" fill="url(#as-grid)"/>
-            <path d="M115 78 Q240 15 390 74 T710 75" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-dasharray="5 7"/>
-            <path d="M430 136 Q510 95 595 125 T790 110" fill="none" stroke="#1e3a5f" stroke-width="2" stroke-dasharray="5 7"/>
-            <path d="M250 125 Q340 65 435 105" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
-            <path d="M250 125 Q500 15 765 165" fill="none" stroke="#a78bfa" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 5"/>
-            <g fill="#38bdf8" stroke="#e0f2fe" stroke-width="2"><circle cx="250" cy="125" r="6"/><circle cx="435" cy="105" r="5"/></g>
-            <g fill="#a78bfa" stroke="#ede9fe" stroke-width="2"><circle cx="765" cy="165" r="5"/></g>
-            <g fill="#e2e8f0" font-size="13" font-family="system-ui"><text x="264" y="119">台北桃園 RCTP</text><text x="447" y="98">東京成田 RJAA</text><text x="680" y="188">洛杉磯 KLAX</text></g>
-            <text x="18" y="225" fill="#64748b" font-size="10" font-family="system-ui">AEROSIM · ROUTE SCHEMATIC</text>
-          </svg>
-        </div>
+        <div id="overview-route-map" class="aerosim-map rounded-lg overflow-hidden border border-slate-700/70" role="application" aria-label="真實地圖上的航空航線網絡"></div>
       </section>
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
         <div class="lg:col-span-4 space-y-3">
@@ -183,16 +172,17 @@
             </div>
           </div>
           <div class="as-box">
-            <div class="as-header-box">燃油現貨走勢 (Jet-A1 Spot Trends)</div>
-            <div class="p-2 space-y-2"><div class="h-44 w-full"><canvas id="fuelChart"></canvas></div></div>
+            <div class="as-header-box flex items-center justify-between gap-2"><span>真實航空燃油價格 · JET FUEL</span><span id="fuel-source-status" class="text-[10px] text-amber-300">連線中…</span></div>
+            <div class="p-3 space-y-2">
+              <div class="flex items-end justify-between gap-3"><strong id="fuel-price-current" class="text-2xl font-black text-amber-300">載入中</strong><span id="fuel-price-unit" class="text-[10px] text-gray-400">USD / gallon</span></div>
+              <div class="text-[10px] text-gray-400">市場數據日期：<span id="fuel-price-date">—</span></div>
+              <div class="text-[10px] text-gray-500">每小時檢查更新；市場原始報價按交易日發布。</div>
+              <div class="h-36 w-full"><canvas id="fuelChart"></canvas></div>
+              <a class="text-[10px] text-sky-400 underline" href="https://fred.stlouisfed.org/series/DJFUELUSGULF" target="_blank" rel="noopener">資料來源：EIA（經 FRED 發布）</a>
+            </div>
           </div>
         </div>
-        <div class="lg:col-span-3 space-y-3">
-          <div class="as-box">
-            <div class="as-header-box flex justify-between"><span>目前線上的使用者</span><span class="text-emerald-400 font-mono">(12)</span></div>
-            <div class="p-2 text-xs leading-relaxed font-mono text-gray-300 break-words">411694617, Albert_Einstein, context7, Copernicus, FreeStyle, Galileo, HenriSainio, Kopernik, MasterLee98</div>
-          </div>
-        </div>
+        <div class="lg:col-span-3 space-y-3"></div>
       </div>
     </div>
 
@@ -516,6 +506,8 @@
           <span>航線網絡營運與 ORS 評分矩陣</span>
           <button onclick="window.openModal('modal-route')" class="bg-blue-900 border border-blue-600 text-blue-200 px-2.5 py-0.5 text-xs font-bold hover:bg-blue-800">+ 開闢新航線</button>
         </div>
+        <div id="route-network-map" class="aerosim-map rounded-lg overflow-hidden border border-slate-700/70" role="application" aria-label="真實地圖上的航線網絡"></div>
+        <div class="text-[10px] text-gray-500">地圖資料 © OpenStreetMap contributors</div>
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse border border-[#2d3748] text-xs">
             <thead>
@@ -541,7 +533,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-1">
           <div class="bg-[#141923] p-2.5 border border-[#2d3748]">
             <span class="text-gray-400 block text-[10px]">即時現貨價格 (SPOT)</span>
-            <span class="text-lg font-bold text-amber-400">$820 / 噸</span>
+            <span id="finance-fuel-price" class="text-lg font-bold text-amber-400">載入中…</span>
+            <span id="finance-fuel-date" class="block text-[10px] text-gray-500">資料日期：—</span>
           </div>
           <div class="bg-[#141923] p-2.5 border border-[#2d3748] space-y-1">
             <span class="text-gray-400 block text-[10px]">4 週短線避險</span>
@@ -629,5 +622,7 @@
 
   <!-- 主邏輯載入 -->
   <script type="module" src="src/ui/navigation.js"></script>
+  <script type="module" src="src/ui/routeMap.js"></script>
+  <script type="module" src="src/ui/fuel.js"></script>
 </body>
 </html>
