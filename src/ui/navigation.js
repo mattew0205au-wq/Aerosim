@@ -19,7 +19,13 @@ const DEFAULT_STATE = {
   schedules: {
     "B-16701": [{ routeId: "R1", flightNo: "SAA801", startHour: 8, duration: 3.5, turnaround: .75 }],
     "B-16702": [{ routeId: "R2", flightNo: "SAA008", startHour: 10, duration: 12.5, turnaround: .75 }]
-  }
+  },
+  contracts: [
+    { id:"C-1001", type:"地勤服務", partner:"桃園航勤 (TPE Ops)", scope:"RCTP 台北桃園", fee:1200, currency:"AS$", startDate:"2026-01-01", endDate:"2027-12-31", status:"生效中", notes:"每架次過站服務" },
+    { id:"C-1002", type:"地勤服務", partner:"JAL Ground Service", scope:"RJAA 東京成田", fee:1850, currency:"AS$", startDate:"2026-01-01", endDate:"2027-06-30", status:"生效中", notes:"每架次過站服務" },
+    { id:"C-1003", type:"機上餐飲", partner:"SATS Catering Ltd", scope:"全航線", fee:14, currency:"AS$", startDate:"2026-01-01", endDate:"2028-12-31", status:"生效中", notes:"每位乘客餐飲供應" },
+    { id:"C-1004", type:"地勤服務", partner:"Swissport International", scope:"海外站點", fee:1650, currency:"AS$", startDate:"2026-01-01", endDate:"2027-06-30", status:"生效中", notes:"地勤代理及行李處理" }
+  ]
 };
 
 function loadState() {
@@ -35,7 +41,8 @@ function loadState() {
         return { ...aircraft, capacity, seats: Number(aircraft.seats) || capacity };
       }) : structuredClone(DEFAULT_STATE.fleet),
       routes: Array.isArray(saved.routes) ? saved.routes : structuredClone(DEFAULT_STATE.routes),
-      schedules: saved.schedules && typeof saved.schedules === "object" ? saved.schedules : structuredClone(DEFAULT_STATE.schedules)
+      schedules: saved.schedules && typeof saved.schedules === "object" ? saved.schedules : structuredClone(DEFAULT_STATE.schedules),
+      contracts: Array.isArray(saved.contracts) ? saved.contracts : structuredClone(DEFAULT_STATE.contracts)
     };
   } catch (error) {
     console.warn("AeroSim save was invalid; using a clean game.", error);
@@ -63,8 +70,16 @@ const escapeText = value => String(value).replace(/[&<>"']/g, ch => ({ "&":"&amp
 window.toggleDropdown = function(event, element) {
   event.stopPropagation();
   const wasOpen = element.classList.contains("active");
-  document.querySelectorAll(".dropdown").forEach(node => node.classList.remove("active"));
-  if (!wasOpen) element.classList.add("active");
+  document.querySelectorAll(".dropdown").forEach(node => {
+    node.classList.remove("active");
+    const menu = node.querySelector(".dropdown-menu");
+    if (menu) menu.style.top = "";
+  });
+  if (!wasOpen) {
+    element.classList.add("active");
+    const menu = element.querySelector(".dropdown-menu");
+    if (menu && matchMedia("(max-width: 720px)").matches) menu.style.top = Math.ceil(element.getBoundingClientRect().bottom + 4) + "px";
+  }
 };
 document.addEventListener("click", () => document.querySelectorAll(".dropdown").forEach(node => node.classList.remove("active")));
 
